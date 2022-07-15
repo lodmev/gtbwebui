@@ -49,5 +49,6 @@
   "devDependencies": {
     "@babel/plugin-syntax-flow": "^7.17.12",
     "@testing-library/dom": "^8.13.0"
-  }
+  },
+  "packageManager": "yarn@3.2.1"
 }

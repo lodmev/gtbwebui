@@ -1,0 +1,24 @@
+tr.hide {
+	display:none
+}
+td.wide {
+	min-width: 25em;
+}
+td.bitwide {
+	min-width: 10em;
+}
+.table thead.mainthead th{
+	background-color: hsl(0, 0%, 29%);
+	color: hsl(0, 0%, 96%);
+}
+.table tr.row :hover {
+	cursor: pointer;
+
+}
+th[scope="row"] {
+	font-weight: bold;
+}
+hr.blank {
+	margin: 0.5rem;
+	background-color: #3ed0c9;
+}
