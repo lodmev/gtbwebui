@@ -2,7 +2,6 @@ import classNames from "classnames/bind";
 import {Field} from "formik";
 import {
 	Fragment,
-	InputHTMLAttributes,
 	ReactElement,
 	useEffect,
 	useState
@@ -14,7 +13,7 @@ import {fetchClients} from "./Clients";
 import {
 	DivSpinner,
 	ErrorMessage, Pagination, SearchForm,
-	SearchFormProps
+	SearchFormProps, ShowDetailToggle
 } from "./components";
 import "./Narads.css";
 
@@ -178,10 +177,7 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
       <table className="table is-bordered is-narrow is-hoverable ">
         <thead>
           <tr>
-            <td className="noborder">
-              <strong className="tag is-size-8">{`Отображено: ${total}`}</strong>
-            </td>
-            <td className="noborder">
+            <td className="noborder" colSpan={2}>
               <ShowDetailToggle
                 checked={showDetails}
                 onChange={(e) => {
@@ -198,6 +194,13 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
             ))}
           </tr>
         </thead>
+		<tfoot className="">
+		<tr className="mainthead">
+            <th  colSpan={10}>
+              {`Всего: ${total}`}
+            </th>
+		</tr>
+		</tfoot>
         <tbody>
           {props.fetchResult.data.length > 0 ? (
             <Narads narads={props.fetchResult.data} showDetails={showDetails} />
@@ -210,15 +213,6 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
   );
 };
 
-const ShowDetailToggle = (props: InputHTMLAttributes<HTMLInputElement>) => (
-  <div className="field">
-    <div className="control">
-      <label className="checkbox">
-        <input {...props} /> Показывать подробности
-      </label>
-    </div>
-  </div>
-);
 
 const ByClientAuto = (props: {
   searchParams: URLSearchParams;
@@ -299,7 +293,7 @@ const NaradsSearchForm = (props: SearchFormProps) => {
                 />{" "}
               </div>
             </div>
-            <div className="field" style={{ maxWidth: "15em" }}>
+            <div className="field limitted">
               <label className="label">Артикул</label>
               <div className="control">
                 <Field
@@ -310,7 +304,7 @@ const NaradsSearchForm = (props: SearchFormProps) => {
                 />
               </div>
             </div>
-            <div className="field">
+            <div className="field" >
               <label className="label">Наименование запчасти</label>
               <div className="control">
                 <Field
@@ -336,8 +330,8 @@ const NaradsSearchForm = (props: SearchFormProps) => {
         </div>
         </div>
         <div className="field is-horizontal">
-			  <div className="fields-body">
-            <div className="field">
+			  <div className="field-body">
+            <div className="field limitted" >
               <label className="label">Имя клиента</label>
               <div className="control">
                 <Field
@@ -348,8 +342,8 @@ const NaradsSearchForm = (props: SearchFormProps) => {
                 />
               </div>
             </div>
-            <div className="field">
-              <label className="label">Работы</label>
+            <div className="field limitted"> 
+              <label className="label">Выполненные работы</label>
               <div className="control">
                 <Field
                   name="workname"
@@ -412,8 +406,32 @@ const NaradRender = ({
             ></span>
           </div>
         </th>
-        <td className="wide">{narad.dcl.nameindir}</td>
-        <td className="wide">{narad.clm.model}</td>
+        <td className="wide">
+          <div className={`dropdown is-hoverable`}>
+            <div className="is-clickable" >
+			{narad.dcl.nameindir}
+            </div>
+            <div className="dropdown-menu" id="dropdown-menu" role="menu">
+              <div className="dropdown-content">
+                <a href={"narads?client_id=" + narad.dcl.id} className="dropdown-item">
+                  {`История по клиенту ${narad.dcl.nameindir}`}
+                </a>
+              </div>
+            </div>
+          </div>
+		</td>
+        <td className="wide">
+			<div className="dropdown is-hoverable is-clickable">
+			{narad.clm.model}
+            <div className="dropdown-menu" id="dropdown-menu" role="menu">
+              <div className="dropdown-content">
+                <a href={"narads?clm_id=" + narad.clm.id} className="dropdown-item">
+                  {`История по автомобилю ${narad.clm.model}`}
+                </a>
+              </div>
+            </div>
+			</div>
+		</td>
         <td className="bitwide">{narad.clm.vin}</td>
       </tr>
       <tr style={showDetailes ? {} : { display: "none" }}>

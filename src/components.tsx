@@ -1,6 +1,8 @@
 import classNames from 'classnames/bind'
 import {Formik} from 'formik'
-import {FC, ReactElement, ReactNode} from 'react'
+import {FC, ReactElement, ReactNode,
+	InputHTMLAttributes,
+} from 'react'
 import {Link, LinkProps, useMatch, useResolvedPath} from 'react-router-dom'
 
 type THeadsProps = {
@@ -175,3 +177,12 @@ enableReinitialize={true}
 
 	)
 }
+export const ShowDetailToggle = (props: InputHTMLAttributes<HTMLInputElement>) => (
+  <div className="field tag">
+    <div className="control">
+      <label className="checkbox">
+        <input {...props} /> Развернуть все
+      </label>
+    </div>
+  </div>
+);

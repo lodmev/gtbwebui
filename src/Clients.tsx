@@ -1,6 +1,6 @@
 import classNames from "classnames/bind";
 import { Field } from "formik";
-import { Fragment, InputHTMLAttributes, useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useAsyncAbortable } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
 import { fetchAPI } from "./api";
@@ -10,6 +10,7 @@ import {
   Pagination,
   SearchForm,
   SearchFormProps,
+  ShowDetailToggle
 } from "./components";
 
 type fetchResult = {
@@ -204,10 +205,7 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
       <table className="table is-bordered is-narrow is-hoverable is-fullwidth">
         <thead>
           <tr>
-            <td className="noborder">
-              <strong className="tag is-size-8">{`Всего: ${total}`}</strong>
-            </td>
-            <td className="noborder">
+            <td className="noborder" colSpan={2}>
               <ShowDetailToggle
                 checked={showDetails}
                 onChange={(e) => {
@@ -224,6 +222,13 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
             ))}
           </tr>
         </thead>
+		<tfoot className="">
+		<tr className="mainthead">
+            <th  colSpan={10}>
+              {`Всего: ${total}`}
+            </th>
+		</tr>
+		</tfoot>
         <tbody>
           {props.fetchResult.data.length > 0 ? (
             <Clients
@@ -273,7 +278,7 @@ const ClientRender = (props: { client: Client; gShowDetails: boolean }) => {
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
                 <a href={"narads?client_id=" + props.client.id} className="dropdown-item">
-                  История по клиенту
+                  {`История по клиенту ${props.client.nameindir}`}
                 </a>
               </div>
             </div>
@@ -336,7 +341,7 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
                 <a href={"narads?clm_id=" + car.id} className="dropdown-item">
-                  История по автомобилю
+                  {`История по автомобилю ${car.model}`}
                 </a>
               </div>
             </div>
@@ -380,16 +385,6 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
     </table>
   );
 };
-
-const ShowDetailToggle = (props: InputHTMLAttributes<HTMLInputElement>) => (
-  <div className="field">
-    <div className="control">
-      <label className="checkbox">
-        <input {...props} /> Показывать подробности
-      </label>
-    </div>
-  </div>
-);
 
 const EmptyRow = () => (
   <tr>

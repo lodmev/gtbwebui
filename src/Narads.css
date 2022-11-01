@@ -24,11 +24,14 @@ td table {
 .closed:after {
   content: "\FF0B";
 }
+.limitted {
+	max-width: 20rem;
+}
 
 caption {
 	padding-left: 1rem;
 }
-.table .mainthead th {
+.table .mainthead > th{
   background-color: hsl(0, 0%, 29%);
   color: hsl(0, 0%, 96%);
 }
