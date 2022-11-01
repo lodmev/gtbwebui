@@ -3,6 +3,7 @@ import { Link, Outlet, Route, Routes } from "react-router-dom";
 import './App.css';
 import { CustomLink } from './components';
 import { NaradsPage } from './Narads';
+import { ClientsPage } from './Clients';
 
 interface AppProps {
 	name: string
@@ -17,6 +18,7 @@ const App: FC<AppProps> = (props) => {
 			<Routes>
 				<Route path="/" element={<Layout />}>
 					<Route path="/narads" element={<NaradsPage />} />
+					<Route path="/clients" element={<ClientsPage />} />
 					{/* Using path="*"" means "match anything", so this route acts like a catch-all for URLs that we don't have explicit routes for. */}
 					<Route path="*" element={<NoMatch />} />
 				</Route>

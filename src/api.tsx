@@ -22,8 +22,8 @@ export const fetchAPI = async (
 		const err = await result.json()
 		const details = err.detail
 		throw new Error(message + ", details: " + details);
-		} catch {
-			throw new Error(message)
+		} catch (e){
+			throw new Error(e as string)
 		}
 	}
 	return result.json();

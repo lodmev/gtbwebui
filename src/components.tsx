@@ -1,21 +1,25 @@
 import classNames from 'classnames/bind'
-import {ChangeEvent, FC, FormEvent, Fragment, ReactElement, ReactNode, useEffect, useState} from 'react'
+import {Formik} from 'formik'
+import {FC, ReactElement, ReactNode} from 'react'
 import {Link, LinkProps, useMatch, useResolvedPath} from 'react-router-dom'
 
 type THeadsProps = {
 	name: string
 }
+export type SearchFormProps = {
+searchParams: URLSearchParams,
+onSubmit: (searchParams: URLSearchParams) => void,
+onReset: () => void,
+children?: ReactElement,
+initValues?: any}
 
-type inpField = {
-	label: string,
-	name: string,
-}
+
 
 interface TProps {
-	tname: string
 	heads: Array<THeadsProps>
 	children: ReactNode
 }
+
 export const CustomLink = ({children, to, ...props}: LinkProps) => {
 	const resolved = useResolvedPath(to)
 	const match = useMatch({path: resolved.pathname + "/*", end: true})
@@ -33,19 +37,73 @@ export const Table: FC<TProps> = (props) => {
 		"is-narrow": true
 	});
 	return <div className="table-container is-fullwidth"><table className={className}>
-		<caption className='title has-text-left'>{props.tname}</caption>
+		<thead >
 		<THead heads={props.heads} isLoading={isLoading} />
+	</thead>
 		{!isLoading ? props.children : <TSpinner colspan={props.heads.length} />}
 	</table></div>
 }
 const THead = (prop: {heads: Array<THeadsProps>, isLoading: boolean}) => {
-	return <thead className='mainthead'>
-		<tr>
+	return ( 
+		<tr className='mainthead'>
 			{prop.heads.map((val, i) => (
-				<th  key={i}>{val.name}</th>)
+				<th key={i}>{val.name}</th>)
 			)}
 		</tr>
-	</thead>
+		)
+}
+export const Pagination = (props: {curPage:number, totalPages:number, setPage: (page: number) => void}) => {
+	const getNextPages = (currentPage: number, totalPages: number) => {
+		if (currentPage + 1 > totalPages) return null
+		const res: ReactElement[] = []
+
+		for (let i = currentPage + 1; i < currentPage + 5; i++) {
+			if (i > totalPages) break;
+			res.push(<li key={i} className='pagination-link' onClick={() => {props.setPage(i)}}>{i}</li>)
+		}
+		return res
+	}
+	const getPrevPages = (currentPage: number) => {
+		if (currentPage - 1 <= 0) return null
+		const res: ReactElement[] = []
+
+		for (let i = currentPage - 1; i > 0; i--) {
+			if (i <= currentPage - 5) break;
+			res.unshift(<li key={i} className='pagination-link' onClick={() => {props.setPage(i)}}>{i}</li>)
+		}
+		return res
+	}
+	const curPage = props.curPage
+	const totalPages = props.totalPages
+	const prevPages = getPrevPages(curPage)
+	const nextPages = getNextPages(curPage, totalPages)
+	const isDisabledClass = (el: any) => {
+		if (el) return ''
+		else return 'is-disabled'
+	}
+	return (
+		<>
+			<div className='block column is-8' style={{padding: "inherit"}}>
+				{totalPages > 1 &&
+					<div className='block tag is-info'>Отобраны результатов на&nbsp;
+						<strong>{totalPages}</strong>
+						&nbsp;страницах:</div>}
+				{totalPages > 1 && <nav className='pagination is-small is-centered'>
+					<button className={`pagination-previous ${isDisabledClass(prevPages)}`} disabled={!Boolean(prevPages)} onClick={() => {props.setPage(curPage - 1)}}>Предыдущая</button>
+					<button className={`pagination-next ${isDisabledClass(nextPages)}`} disabled={!Boolean(nextPages)} onClick={() => {props.setPage(curPage + 1)}}>Следующая</button>
+					<ul className="pagination-list">
+						{prevPages}
+						<li className='pagination-link is-current'>{curPage}</li>
+						{nextPages}
+						<li className='pagination-link notactive'><form onSubmit={(e) => {
+							e.preventDefault()
+							const v = e.currentTarget.toPage.value
+							props.setPage(v)
+						}}><input type='number' name='toPage' style={{maxWidth: "3rem", border: "none"}} max={totalPages} placeholder='Стр.' /><button type='submit'>&gt;&gt;</button></form></li>
+					</ul>
+				</nav>}
+			</div>
+		</>)
 }
 
 export const DivSpinner = (): ReactElement => (
@@ -64,75 +122,56 @@ const TSpinner = ({colspan}: {colspan: number}) => (
 	<tr><td colSpan={colspan}><span className='loader' style={{margin: "auto"}}></span></td></tr>
 )
 
-export const SearchForm = ({inpFields, initSearchParams, onsubmit, children}: {inpFields: inpField[], initSearchParams: URLSearchParams, onsubmit: (urlSP: URLSearchParams) => void, children: ReactNode}): ReactElement => {
-	const [fValues, setValues] = useState<Record<string, string>>({})
-	useEffect(() => {
-		const values: Record<string, string> = {}
-		for (const [name, value] of initSearchParams) {
-			values[name] = value
-		}
-		setValues(values)
-	}, [initSearchParams])
-	const onChange = (event: ChangeEvent<HTMLInputElement>) => {
-		const name = event.target.name
-		const value = event.target.value
-		setValues(prevValues => {
-			if (!value && prevValues[name]) {
-				delete prevValues[name]
-				return prevValues
-			}
-			return {
-				...prevValues,
-				[name]: value
-			}
-		})
-	}
-	return (
+export const SearchForm = (props: SearchFormProps ) => {
+	let initFormValues = props.initValues
+type Values = typeof initFormValues
 
-		<form onSubmit={(e: FormEvent<HTMLFormElement>) => {
-			e.preventDefault()
-			onsubmit(new URLSearchParams(fValues))
-		}}>
-			<div className='field'>
-				{inpFields.map(f => (
-					<Fragment key={f.name}>
-						<label className='label'>{f.label}</label>
-						<div className='control'>
-							<input name={f.name} className='input' type='text'
-								placeholder={f.label}
-								value={fValues[f.name] || ""}
-								onChange={onChange}
-							/>
-						</div>
-					</Fragment>
-				)
-				)}
-			</div>
-			{children}
-			<div className='field is-grouped is-grouped-centered'>
-				<div className='control'>
-					<button className='button is-primary' type='submit'>Поиск</button>
-				</div>
-				<div className='control'>
-					<button className='button' disabled={true}>Сброс</button>
-				</div>
-			</div>
-		</form>
-	)
-}
-export const TextInput = ({name, initVal, onchange}: {name: string, initVal: string | null, onchange: (name: string, value: string) => void}) => {
-	const [val, setValue] = useState<string>(initVal || '')
-	useEffect(() => {
-		if (initVal) {setValue(initVal)}
-	}, [initVal])
+	const getValues = (searchParams: URLSearchParams) => {
+		return Object.keys(initFormValues).reduce((attr, key) => (
+			{
+				...attr,
+				[key]: searchParams.get(key) || ''
+			}),
+			initFormValues
+		)
+	}
+		
+	const getSearchParam = (values: Values) => {
+		//Add params only if they not empty
+		//const res = new URLSearchParams()
+		Object.keys(values).forEach(key => {
+			let val = values[key as keyof Values]
+			if (val) {
+				props.searchParams.set(key, val)
+				} else {
+					props.searchParams.delete(key)
+				}
+		})
+		return props.searchParams
+
+	}
+
+
 	return (
-		<div className='field'>
-			<div className='control' >
-				<input type='text' name={name} value={val} className='input' onChange={(e) => {
-					setValue(e.target.value)
-					onchange(e.target.name, e.target.value)
-				}} ></input>
-			</div>
+		<div className="block has-background-white-bis">
+		<Formik
+enableReinitialize={true}
+			initialValues={getValues(props.searchParams)}
+			onSubmit={(values: Values) => {props.onSubmit(getSearchParam(values))}}>
+			{fprops => (
+				<form onSubmit={fprops.handleSubmit}>
+					{props.children}
+					<div className="field is-grouped">
+						<div className="control">
+							<button type='submit' className="button is-link" disabled={!fprops.dirty}>Найти</button>
+						</div>
+						<div className="control">
+							<button type='button' onClick={props.onReset} className="button is-link is-light">Сброс</button>
+						</div>
+					</div>
+				</form>)}
+		</Formik>
 		</div>
+
 	)
 }

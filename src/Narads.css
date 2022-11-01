@@ -1,24 +1,75 @@
-tr.hide {
-	display:none
-}
 td.wide {
-	min-width: 25em;
+  min-width: 20rem;
 }
-td.bitwide {
-	min-width: 10em;
-}
-.table thead.mainthead th{
-	background-color: hsl(0, 0%, 29%);
-	color: hsl(0, 0%, 96%);
-}
-.table tr.row :hover {
-	cursor: pointer;
 
+td.bitwide {
+  min-width: 13rem;
+}
+
+.table td.noborder {
+  border: none;
+}
+td table {
+  width: 85%;
+}
+.open,
+.closed {
+  /*font-weight: bold;*/
+  /*font-size: 1rem;*/
+  float: right;
+}
+.open:after {
+  content: "\FF0D";
+}
+.closed:after {
+  content: "\FF0B";
+}
+
+caption {
+	padding-left: 1rem;
+}
+.table .mainthead th {
+  background-color: hsl(0, 0%, 29%);
+  color: hsl(0, 0%, 96%);
+}
+li.pagination-link.notactive:active {
+  box-shadow: none;
 }
 th[scope="row"] {
-	font-weight: bold;
+  font-weight: 600;
 }
 hr.blank {
-	margin: 0.5rem;
-	background-color: #3ed0c9;
+  margin: 0.5rem;
+  background-color: black;
+}
+.soughtFor {
+  font-weight: 600;
+}
+.working:after {
+  content: "\1F4BC";
+  position: relative;
+  padding-left: 3px;
+  bottom: 3px;
+}
+.loading:after {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+  -webkit-animation: ellipsis steps(4, end) 900ms infinite;
+  animation: ellipsis steps(4, end) 900ms infinite;
+  content: "\2026";
+  /* ascii code for the ellipsis character */
+  width: 0px;
+}
+
+@keyframes ellipsis {
+  to {
+    width: 40px;
+  }
+}
+
+@-webkit-keyframes ellipsis {
+  to {
+    width: 40px;
+  }
 }
