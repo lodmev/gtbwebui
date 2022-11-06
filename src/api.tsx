@@ -17,11 +17,10 @@ export const fetchAPI = async (
 		throw new Error(`URL ${url_api} not available${err}`)
 	}
 	if (result.status !== needStatus) {
-		const message ='bad request to API, response code: '  	+ result.status
+		const message ='bad request to API, response code: ' + result.status
 		try {
 		const err = await result.json()
-		const details = err.detail
-		throw new Error(message + ", details: " + details);
+		throw new Error(`${message}; ${err.title}: ${err.detail}`);
 		} catch (e){
 			throw new Error(e as string)
 		}

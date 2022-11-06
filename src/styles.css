@@ -5,6 +5,9 @@ td.wide {
 td.bitwide {
   min-width: 13rem;
 }
+td.litle-wide {
+  min-width: 5rem;
+  }
 
 .table td.noborder {
   border: none;

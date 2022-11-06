@@ -15,7 +15,7 @@ import {
 	ErrorMessage, Pagination, SearchForm,
 	SearchFormProps, ShowDetailToggle
 } from "./components";
-import "./Narads.css";
+import "./styles.css";
 
 type Narad = {
   id: number;
@@ -295,6 +295,17 @@ const NaradsSearchForm = (props: SearchFormProps) => {
                 />{" "}
               </div>
             </div>
+            <div className="field" >
+              <label className="label">Наименование запчасти</label>
+              <div className="control">
+                <Field
+                  name="g_name"
+                  type="search"
+                  className="input"
+                  placeholder="Наименование запчасти"
+                />
+              </div>
+            </div>
             <div className="field limitted">
               <label className="label">Артикул</label>
               <div className="control">
@@ -304,17 +315,6 @@ const NaradsSearchForm = (props: SearchFormProps) => {
                   className="input"
                   placeholder="Артикул"
                 />
-              </div>
-            </div>
-            <div className="field" >
-              <label className="label">Наименование запчасти</label>
-              <div className="control">
-                <Field
-                  name="g_name"
-                  type="search"
-                  className="input"
-                  placeholder="Наименование запчасти"
-                />{" "}
               </div>
             </div>
             <div className="field">
@@ -397,17 +397,18 @@ const NaradRender = ({
   return (
     <Fragment key={narad.id}>
       <tr className="has-text-weight-semibold">
-        <th scope="row" style={getMark(narad.mark)}>
-          <div className="">
+        <td scope="row" className="litle-wide" style={getMark(narad.mark)}>
+          <div >
             {narad.docnumber}
             <span
               className={closeOrOpenCls}
+			  title="Развернуть/Свернуть"
               onClick={() => {
                 setShowDetails((prevState) => !prevState);
               }}
             ></span>
           </div>
-        </th>
+        </td>
         <td className="wide">
           <div className={`dropdown is-hoverable`}>
             <div className="is-clickable" >
@@ -428,7 +429,7 @@ const NaradRender = ({
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
                 <a href={"narads?clm_id=" + narad.clm.id} className="dropdown-item">
-                  {`История по автомобилю ${narad.clm.model}`}
+                  {`История по этому ${narad.clm.model}`}
                 </a>
               </div>
             </div>
@@ -439,7 +440,7 @@ const NaradRender = ({
 		{`${new Date(narad.date1).toLocaleDateString()} ${narad.time1}`}</td>
       </tr>
       <tr style={showDetailes ? {} : { display: "none" }}>
-        <td colSpan={10}>
+        <td colSpan={4}>
           <div>
             {narad.ngoods && (
               <NaradGoods ngoods={narad.ngoods} ngoods_ids={narad.ngoods_ids} />

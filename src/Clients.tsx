@@ -192,7 +192,7 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
     "Примечание",
   ];
   const [showDetails, setShowDetails] = useState(false);
-  const total = props.fetchResult.data.length;
+  const total = props.fetchResult.data ? props.fetchResult.data.length: 0;
   if (total === 0) {
     return (
       <p className="has-background-grey has-text-centered is-size-5">
@@ -381,7 +381,7 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
           <td>Примечания</td>
         </tr>
       </thead>
-      <tbody>{props.cars.length > 0 ? carRows() : <EmptyRow />}</tbody>
+      <tbody>{props.cars && props.cars.length > 0 ? carRows() : <EmptyRow />}</tbody>
     </table>
   );
 };
