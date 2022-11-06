@@ -26,6 +26,7 @@ type Narad = {
     vin: string;
     regno: string;
   };
+  date1: string;
   dcl: {
     id: number;
     nameindir: string;
@@ -35,6 +36,7 @@ type Narad = {
   nworks: naradWork[];
   nworks_ids: number[];
   mark: number;
+  time1: number; 
 };
 type naradGood = {
   id: number;
@@ -162,7 +164,7 @@ export const NaradsPage = (): ReactElement => {
   );
 };
 const ResultsTable = (props: { fetchResult: fetchResult }) => {
-  const heads = ["N°", "Клиент", "Автомобиль", "VIN"];
+  const heads = ["N°", "Клиент", "Автомобиль", "VIN", "Дата и время открытия"];
   const [showDetails, setShowDetails] = useState(false);
   const total = props.fetchResult.data.length;
   if (total === 0) {
@@ -433,9 +435,11 @@ const NaradRender = ({
 			</div>
 		</td>
         <td className="bitwide">{narad.clm.vin}</td>
+		<td className="">
+		{`${new Date(narad.date1).toLocaleDateString()} ${narad.time1}`}</td>
       </tr>
       <tr style={showDetailes ? {} : { display: "none" }}>
-        <td colSpan={4}>
+        <td colSpan={10}>
           <div>
             {narad.ngoods && (
               <NaradGoods ngoods={narad.ngoods} ngoods_ids={narad.ngoods_ids} />
