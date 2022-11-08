@@ -84,11 +84,13 @@ export const ClientsPage = () => {
       <p className="pb-3 has-text-weight-bold is-size-5">
         Поля для запроса в базу данных:
       </p>
+		<div className="column is-8 has-background-white-bis">
       <ClientsSearchForm
         searchParams={searchParams}
         onSubmit={onFormSubmit}
         onReset={onFormReset}
       />
+		</div>
       {asyncClients.loading && <DivSpinner />}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (

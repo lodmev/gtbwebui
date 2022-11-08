@@ -1,19 +1,17 @@
 import classNames from "classnames/bind";
-import {Field} from "formik";
+import { Field } from "formik";
+import { Fragment, ReactElement, useEffect, useState } from "react";
+import { useAsyncAbortable } from "react-async-hook";
+import { useSearchParams } from "react-router-dom";
+import { fetchAPI } from "./api";
+import { fetchClients } from "./Clients";
 import {
-	Fragment,
-	ReactElement,
-	useEffect,
-	useState
-} from "react";
-import {useAsyncAbortable} from "react-async-hook";
-import {useSearchParams} from "react-router-dom";
-import {fetchAPI} from "./api";
-import {fetchClients} from "./Clients";
-import {
-	DivSpinner,
-	ErrorMessage, Pagination, SearchForm,
-	SearchFormProps, ShowDetailToggle
+  DivSpinner,
+  ErrorMessage,
+  Pagination,
+  SearchForm,
+  SearchFormProps,
+  ShowDetailToggle,
 } from "./components";
 import "./styles.css";
 
@@ -36,7 +34,7 @@ type Narad = {
   nworks: naradWork[];
   nworks_ids: number[];
   mark: number;
-  time1: number; 
+  time1: number;
 };
 type naradGood = {
   id: number;
@@ -124,9 +122,14 @@ export const NaradsPage = (): ReactElement => {
     },
     [searchParams]
   );
-  const onFormSubmit = (searchParams: URLSearchParams) => {
-	searchParams.delete("page")
-    setSearchParams(searchParams);
+  const onFormSubmit = (sParams: URLSearchParams) => {
+    sParams.delete("page");
+    if (sParams.get("cl_name")) {
+      sParams.delete("client_id");
+      sParams.delete("clm_id");
+    }
+    if (sParams.get("model_name")) sParams.delete("clm_id");
+    setSearchParams(sParams);
   };
   const onFormReset = () => {
     setSearchParams({}, { replace: true });
@@ -139,12 +142,14 @@ export const NaradsPage = (): ReactElement => {
   return (
     <div className="block">
       <p className="pb-3 has-text-weight-bold is-size-5">Поиск заказ-нарядов</p>
+		<div className="column is-three-fifths has-background-white-bis">
       <ByClientAuto searchParams={searchParams} />
       <NaradsSearchForm
         searchParams={searchParams}
         onSubmit={onFormSubmit}
         onReset={onFormReset}
       />
+		</div>
       {asyncNarads.loading && <DivSpinner />}
       {asyncNarads.error && <ErrorMessage text={asyncNarads.error.message} />}
       {asyncNarads.result && (
@@ -164,7 +169,7 @@ export const NaradsPage = (): ReactElement => {
   );
 };
 const ResultsTable = (props: { fetchResult: fetchResult }) => {
-  const heads = ["N°", "Клиент", "Автомобиль", "VIN", "Дата и время открытия"];
+  const heads = ["N°", "Клиент", "Автомобиль", "VIN", "Гос. номер" , "Дата и время открытия"];
   const [showDetails, setShowDetails] = useState(false);
   const total = props.fetchResult.data.length;
   if (total === 0) {
@@ -196,13 +201,11 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
             ))}
           </tr>
         </thead>
-		<tfoot className="">
-		<tr className="mainthead">
-            <th  colSpan={10}>
-              {`Всего: ${total}`}
-            </th>
-		</tr>
-		</tfoot>
+        <tfoot className="">
+          <tr className="mainthead">
+            <th colSpan={10}>{`Всего: ${total}`}</th>
+          </tr>
+        </tfoot>
         <tbody>
           {props.fetchResult.data.length > 0 ? (
             <Narads narads={props.fetchResult.data} showDetails={showDetails} />
@@ -215,10 +218,7 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
   );
 };
 
-
-const ByClientAuto = (props: {
-  searchParams: URLSearchParams;
-}) => {
+const ByClientAuto = (props: { searchParams: URLSearchParams }) => {
   const blank = "________________________";
   const byClient = props.searchParams.get("client_id");
   const byClm = props.searchParams.get("clm_id");
@@ -233,21 +233,29 @@ const ByClientAuto = (props: {
   );
   const getClName = () => {
     if (result && result.data && result.data[0]) {
-      return <span className="is-size-6 has-text-info">{result.data[0].nameindir}</span>;
+      return (
+        <span className="is-size-6 has-text-info">
+          {result.data[0].nameindir}
+        </span>
+      );
     } else {
       return blank;
     }
   };
   const getCarName = () => {
     if (result && result.data && result.data[0].cars) {
-      return <span className="is-size-6 has-text-info">{result.data[0].cars[0].model}</span>;
+      return (
+        <span className="is-size-6 has-text-info">
+          {result.data[0].cars[0].model}
+        </span>
+      );
     } else {
       return blank;
     }
   };
   if (byClient || byClm) {
     return (
-      <div className="block columns">
+      <div className="columns">
         {result && (
           <>
             {(byClient || byClm) && (
@@ -275,89 +283,88 @@ const NaradsSearchForm = (props: SearchFormProps) => {
     articul: "",
     model_name: "",
     workname: "",
-	cl_name: "",
+    cl_name: "",
     docnumber: "",
   };
   return (
     <>
       <SearchForm initValues={initValues} {...props}>
-		<>
-        <div className="field is-horizontal">
-          <div className="field-body">
-            <div className="field" style={{ maxWidth: "6em" }}>
-              <label className="label">Номер з/н</label>
-              <div className="control">
-                <Field
-                  name="docnumber"
-                  type="number"
-                  className="input"
-                  placeholder="Номер"
-                />{" "}
+        <>
+          <div className="field is-horizontal">
+            <div className="field-body">
+              <div className="field" style={{ maxWidth: "6em" }}>
+                <label className="label">Номер з/н</label>
+                <div className="control">
+                  <Field
+                    name="docnumber"
+                    type="number"
+                    className="input"
+                    placeholder="Номер"
+                  />{" "}
+                </div>
               </div>
-            </div>
-            <div className="field" >
-              <label className="label">Наименование запчасти</label>
-              <div className="control">
-                <Field
-                  name="g_name"
-                  type="search"
-                  className="input"
-                  placeholder="Наименование запчасти"
-                />
+              <div className="field">
+                <label className="label">Название з\ч</label>
+                <div className="control">
+                  <Field
+                    name="g_name"
+                    type="search"
+                    className="input"
+                    placeholder="Наименование запчасти"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="field limitted">
-              <label className="label">Артикул</label>
-              <div className="control">
-                <Field
-                  name="articul"
-                  type="search"
-                  className="input"
-                  placeholder="Артикул"
-                />
-              </div>
-            </div>
-            <div className="field">
-              <label className="label">Автомобиль</label>
-              <div className="control">
-                <Field
-                  name="model_name"
-                  type="search"
-                  className="input"
-                  placeholder="Марка и/или модель"
-                  disabled={props.searchParams.get("clm_id")}
-                />{" "}
-              </div>
-          </div>
-        </div>
-        </div>
-        <div className="field is-horizontal">
-			  <div className="field-body">
-            <div className="field limitted" >
-              <label className="label">Имя клиента</label>
-              <div className="control">
-                <Field
-                  name="cl_name"
-                  type="search"
-                  className="input"
-                  placeholder="Имя в справочнике"
-                />
-              </div>
-            </div>
-            <div className="field limitted"> 
-              <label className="label">Выполненные работы</label>
-              <div className="control">
-                <Field
-                  name="workname"
-                  type="search"
-                  className="input"
-                  placeholder="Выполненные работы"
-                />
+              <div className="field">
+                <label className="label">Артикул</label>
+                <div className="control">
+                  <Field
+                    name="articul"
+                    type="search"
+                    className="input"
+                    placeholder="Артикул"
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-	  </>
+          <div className="field is-horizontal">
+            <div className="field-body">
+              <div className="field">
+                <label className="label">Имя клиента</label>
+                <div className="control">
+                  <Field
+                    name="cl_name"
+                    type="search"
+                    className="input"
+                    placeholder="Имя в справочнике"
+                  />
+                </div>
+              </div>
+              <div className="field">
+                <label className="label">Автомобиль</label>
+                <div className="control">
+                  <Field
+                    name="model_name"
+                    type="search"
+                    className="input"
+                    placeholder="Марка и/или модель"
+                  />
+                </div>
+              </div>
+              <div className="field">
+                <label className="label">Работы</label>
+                <div className="control">
+                  <Field
+                    name="workname"
+                    type="search"
+                    className="input"
+                    placeholder="Выполненные работы"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       </SearchForm>
     </>
   );
@@ -397,12 +404,12 @@ const NaradRender = ({
   return (
     <Fragment key={narad.id}>
       <tr className="has-text-weight-semibold">
-        <td scope="row" className="litle-wide" style={getMark(narad.mark)}>
-          <div >
+        <td className="litle-wide" style={getMark(narad.mark)}>
+          <div>
             {narad.docnumber}
             <span
               className={closeOrOpenCls}
-			  title="Развернуть/Свернуть"
+              title="Развернуть/Свернуть"
               onClick={() => {
                 setShowDetails((prevState) => !prevState);
               }}
@@ -411,36 +418,42 @@ const NaradRender = ({
         </td>
         <td className="wide">
           <div className={`dropdown is-hoverable`}>
-            <div className="is-clickable" >
-			{narad.dcl.nameindir}
-            </div>
+            <div className="is-clickable">{narad.dcl.nameindir}</div>
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
-                <a href={"narads?client_id=" + narad.dcl.id} className="dropdown-item">
+                <a
+                  href={"narads?client_id=" + narad.dcl.id}
+                  className="dropdown-item"
+                >
                   {`История по клиенту ${narad.dcl.nameindir}`}
                 </a>
               </div>
             </div>
           </div>
-		</td>
+        </td>
         <td className="wide">
-			<div className="dropdown is-hoverable is-clickable">
-			{narad.clm.model}
+          <div className="dropdown is-hoverable is-clickable">
+            {narad.clm.model}
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
-                <a href={"narads?clm_id=" + narad.clm.id} className="dropdown-item">
+                <a
+                  href={`narads?clm_id=${narad.clm.id}&client_id=${narad.dcl.id}`}
+                  className="dropdown-item"
+                >
                   {`История по этому ${narad.clm.model}`}
                 </a>
               </div>
             </div>
-			</div>
-		</td>
+          </div>
+        </td>
         <td className="bitwide">{narad.clm.vin}</td>
-		<td className="">
-		{`${new Date(narad.date1).toLocaleDateString()} ${narad.time1}`}</td>
+        <td >{narad.clm.regno}</td>
+        <td className="">
+          {`${new Date(narad.date1).toLocaleDateString()} ${narad.time1}`}
+        </td>
       </tr>
       <tr style={showDetailes ? {} : { display: "none" }}>
-        <td colSpan={4}>
+        <td colSpan={10}>
           <div>
             {narad.ngoods && (
               <NaradGoods ngoods={narad.ngoods} ngoods_ids={narad.ngoods_ids} />
