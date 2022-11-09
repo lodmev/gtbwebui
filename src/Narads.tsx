@@ -132,7 +132,7 @@ export const NaradsPage = (): ReactElement => {
     setSearchParams(sParams);
   };
   const onFormReset = () => {
-    setSearchParams({}, { replace: true });
+    setSearchParams({});
   };
   const setPage = (page: number) => {
     searchParams.set("page", page.toString());
@@ -142,7 +142,7 @@ export const NaradsPage = (): ReactElement => {
   return (
     <div className="block">
       <p className="pb-3 has-text-weight-bold is-size-5">Поиск заказ-нарядов</p>
-		<div className="column is-three-fifths has-background-white-bis">
+		<div className="column is-8 has-background-white-bis">
       <ByClientAuto searchParams={searchParams} />
       <NaradsSearchForm
         searchParams={searchParams}

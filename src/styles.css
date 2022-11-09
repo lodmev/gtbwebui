@@ -3,7 +3,7 @@ td.wide {
 }
 
 td.bitwide {
-  min-width: 13rem;
+  min-width: 11rem;
 }
 td.litle-wide {
   min-width: 5rem;
@@ -55,7 +55,6 @@ hr.blank {
   content: "\1F4BC";
   position: relative;
   padding-left: 3px;
-  bottom: 3px;
 }
 .loading:after {
   overflow: hidden;

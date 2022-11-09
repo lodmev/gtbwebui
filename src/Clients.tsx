@@ -73,7 +73,7 @@ export const ClientsPage = () => {
     setSearchParams(searchParams);
   };
   const onFormReset = () => {
-    setSearchParams({}, { replace: true });
+    setSearchParams({});
   };
   const setPage = (page: number) => {
     searchParams.set("page", page.toString());
@@ -84,7 +84,7 @@ export const ClientsPage = () => {
       <p className="pb-3 has-text-weight-bold is-size-5">
         Поля для запроса в базу данных:
       </p>
-		<div className="column is-8 has-background-white-bis">
+		<div className="column has-background-white-bis">
       <ClientsSearchForm
         searchParams={searchParams}
         onSubmit={onFormSubmit}
@@ -204,7 +204,7 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
   }
   return (
     <div className="table-container">
-      <table className="table is-bordered is-narrow is-hoverable is-fullwidth">
+      <table className="table is-bordered is-narrow is-hoverable ">
         <thead>
           <tr>
             <td className="noborder" colSpan={2}>
