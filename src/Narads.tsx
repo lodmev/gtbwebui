@@ -31,10 +31,13 @@ type Narad = {
   };
   ngoods: naradGood[];
   ngoods_ids: number[];
+  notes:string;
   nworks: naradWork[];
   nworks_ids: number[];
   mark: number;
   time1: number;
+  recommendations:string;
+  runrepair: number;
 };
 type naradGood = {
   id: number;
@@ -401,6 +404,7 @@ const NaradRender = ({
   useEffect(() => {
     setShowDetails(gShowDetails);
   }, [gShowDetails]);
+  const displayProp = ()=> { return showDetailes ? {} : { display: "none" } }
   return (
     <Fragment key={narad.id}>
       <tr className="has-text-weight-semibold">
@@ -452,16 +456,29 @@ const NaradRender = ({
           {`${new Date(narad.date1).toLocaleDateString()} ${narad.time1}`}
         </td>
       </tr>
-      <tr style={showDetailes ? {} : { display: "none" }}>
+      <tr style={displayProp()}>
         <td colSpan={10}>
+	  <div className="notes">
+	  <span >Примечания: </span>
+	  {narad.notes}
+	  </div>
+	  
           <div>
             {narad.ngoods && (
               <NaradGoods ngoods={narad.ngoods} ngoods_ids={narad.ngoods_ids} />
             )}
             {narad.nworks && <NaradWorks nworks={narad.nworks} />}
           </div>
+	  <div className="notes">
+	  <span>Пробег: </span>
+	  {`${narad.runrepair == 0 ? "": narad.runrepair + " км;"}`}
+	  </div>
+	  <div className="notes">
+	  <span>Рекомендации: </span>
+	  {narad.recommendations}
+	  </div>
         </td>
-      </tr>
+	  </tr>
     </Fragment>
   );
 };
