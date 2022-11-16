@@ -4,7 +4,7 @@ import { Fragment, ReactElement, useEffect, useState } from "react";
 import { useAsyncAbortable } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
 import { fetchAPI } from "./api";
-import { fetchClients } from "./Clients";
+import { useAsyncFetchClients, ByClientAuto } from "./Clients";
 import {
   DivSpinner,
   ErrorMessage,
@@ -125,6 +125,10 @@ export const NaradsPage = (): ReactElement => {
     },
     [searchParams]
   );
+  const clientID = searchParams.get("client_id");
+  const clmID = searchParams.get("clm_id");
+  const searchClientString = `${clientID ? "client_id="+clientID:""}${clmID ? "&clm_id="+clmID :""}`
+  const asyncClients = useAsyncFetchClients(searchClientString)
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
     if (sParams.get("cl_name")) {
@@ -146,7 +150,11 @@ export const NaradsPage = (): ReactElement => {
     <div className="block">
       <p className="pb-3 has-text-weight-bold is-size-5">Поиск заказ-нарядов</p>
 		<div className="column is-8 has-background-white-bis">
-      <ByClientAuto searchParams={searchParams} />
+        <ByClientAuto
+          clientID={clientID}
+          clmID={clmID}
+          asyncReturn={asyncClients}
+        />
       <NaradsSearchForm
         searchParams={searchParams}
         onSubmit={onFormSubmit}
@@ -221,64 +229,6 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
   );
 };
 
-const ByClientAuto = (props: { searchParams: URLSearchParams }) => {
-  const blank = "________________________";
-  const byClient = props.searchParams.get("client_id");
-  const byClm = props.searchParams.get("clm_id");
-  const { result, error, loading } = useAsyncAbortable(
-    async (abortSignal) => {
-      return fetchClients(
-        `clients?client_id=${byClient || "-1"}&clm_id=${byClm || "-1"}`,
-        abortSignal
-      );
-    },
-    [byClient, byClm]
-  );
-  const getClName = () => {
-    if (result && result.data && result.data[0]) {
-      return (
-        <span className="is-size-6 has-text-info">
-          {result.data[0].nameindir}
-        </span>
-      );
-    } else {
-      return blank;
-    }
-  };
-  const getCarName = () => {
-    if (result && result.data && result.data[0].cars) {
-      return (
-        <span className="is-size-6 has-text-info">
-          {result.data[0].cars[0].model}
-        </span>
-      );
-    } else {
-      return blank;
-    }
-  };
-  if (byClient || byClm) {
-    return (
-      <div className="columns">
-        {result && (
-          <>
-            {(byClient || byClm) && (
-              <div className="column">
-                <strong>По клиенту: {getClName()}</strong>
-              </div>
-            )}
-            {byClm && (
-              <div className="column">
-                <strong>По Автомобилю: {getCarName()}</strong>
-              </div>
-            )}
-          </>
-        )}
-        {error && <ErrorMessage text={error.message} />}
-        {loading && <DivSpinner />}
-      </div>
-    );
-  } else return null;
-};
 
 const NaradsSearchForm = (props: SearchFormProps) => {
   const initValues = {
@@ -404,6 +354,7 @@ const NaradRender = ({
   useEffect(() => {
     setShowDetails(gShowDetails);
   }, [gShowDetails]);
+  const dDItemsCls = "dropdown-item is-size-7"
   const displayProp = ()=> { return showDetailes ? {} : { display: "none" } }
   return (
     <Fragment key={narad.id}>
@@ -427,9 +378,15 @@ const NaradRender = ({
               <div className="dropdown-content">
                 <a
                   href={"narads?client_id=" + narad.dcl.id}
-                  className="dropdown-item"
+                  className={dDItemsCls}
                 >
                   {`История по клиенту ${narad.dcl.nameindir}`}
+                </a>
+                <a
+                  href={"clients?client_id=" + narad.dcl.id}
+                  className={dDItemsCls}
+                >
+                  {`Карточка клиента ${narad.dcl.nameindir}`}
                 </a>
               </div>
             </div>
@@ -442,9 +399,15 @@ const NaradRender = ({
               <div className="dropdown-content">
                 <a
                   href={`narads?clm_id=${narad.clm.id}&client_id=${narad.dcl.id}`}
-                  className="dropdown-item"
+                  className={dDItemsCls}
                 >
                   {`История по этому ${narad.clm.model}`}
+                </a>
+				<a
+                  href={`clients?clm_id=${narad.clm.id}&client_id=${narad.dcl.id}`}
+                  className={dDItemsCls}
+                >
+                  {`Карточка этого ${narad.clm.model}`}
                 </a>
               </div>
             </div>
@@ -467,11 +430,11 @@ const NaradRender = ({
             {narad.ngoods && (
               <NaradGoods ngoods={narad.ngoods} ngoods_ids={narad.ngoods_ids} />
             )}
-            {narad.nworks && <NaradWorks nworks={narad.nworks} />}
+            {narad.nworks && <NaradWorks nworks={narad.nworks} nworks_ids={narad.nworks_ids} />}
           </div>
 	  <div className="notes">
 	  <span>Пробег: </span>
-	  {`${narad.runrepair == 0 ? "": narad.runrepair + " км;"}`}
+	  {`${narad.runrepair === 0 ? "": narad.runrepair + " км;"}`}
 	  </div>
 	  <div className="notes">
 	  <span>Рекомендации: </span>
@@ -526,18 +489,23 @@ const NaradGoods = ({
     </table>
   );
 };
-const NaradWorks = ({ nworks }: { nworks: naradWork[] }) => {
+const NaradWorks = ({ nworks, nworks_ids }: { nworks: naradWork[], nworks_ids: Narad["nworks_ids"]}) => {
   //	const headClass = 'column has-text-info has-text-weight-medium'
+  	const soughtFor = (id: number) => {
+  	if (!nworks_ids) return false
+		return nworks_ids.includes(id)
+  	} 
   const works = () => {
-    return nworks.map((nw, index) => (
-      <tr key={nw.id}>
-        <td>{index + 1}</td>
-        <td>{nw.workname}</td>
-        <td>{nw.timevalue}</td>
-        <td>{nw.finalprice}</td>
-        <td>{nw.worker.workername}</td>
-      </tr>
-    ));
+	  return nworks.map((nw, index) => {
+        const clsName = classNames({ soughtFor: soughtFor(nw.id) });
+		     return <tr className={clsName} key={nw.id}>
+			  <td>{index + 1}</td>
+			  <td>{nw.workname}</td>
+			  <td>{nw.timevalue}</td>
+			  <td>{nw.finalprice}</td>
+			  <td>{nw.worker.workername}</td>
+			  </tr>
+			  });
   };
   return (
     <table className="table is-narrow ">

@@ -1,7 +1,7 @@
 import classNames from "classnames/bind";
 import { Field } from "formik";
 import { Fragment, useEffect, useState } from "react";
-import { useAsyncAbortable } from "react-async-hook";
+import { useAsyncAbortable, UseAsyncReturn } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
 import { fetchAPI } from "./api";
 import {
@@ -10,10 +10,10 @@ import {
   Pagination,
   SearchForm,
   SearchFormProps,
-  ShowDetailToggle
+  ShowDetailToggle,
 } from "./components";
 
-type fetchResult = {
+type clientsFetchResult = {
   data: Client[];
   page: number;
   pages: number;
@@ -22,7 +22,7 @@ type fetchResult = {
 export const fetchClients = (
   uri: string,
   abortSignal?: AbortSignal
-): Promise<fetchResult> => fetchAPI(uri, abortSignal);
+): Promise<clientsFetchResult> => fetchAPI(uri, abortSignal);
 
 type Client = {
   cars: Car[];
@@ -58,19 +58,28 @@ type Car = {
   model: string;
   bodytype: string;
 };
+export const useAsyncFetchClients = (searchString: string) =>{ 
+	 return useAsyncAbortable(
+    async (abortSignal, searchString) => {
+      if (searchString === "") return;
+      return fetchClients("clients?" + searchString, abortSignal);
+    },
+    [searchString]
+  );
+  }
 
 export const ClientsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const asyncClients = useAsyncAbortable(
-    async (abortSignal, searchParams) => {
-      const uri = "clients?" + searchParams.toString();
-      return fetchClients(uri, abortSignal);
-    },
-    [searchParams]
-  );
-
-  const onFormSubmit = (searchParams: URLSearchParams) => {
-    setSearchParams(searchParams);
+  const searchString = searchParams.toString();
+  const asyncClients = useAsyncFetchClients(searchString)
+  const onFormSubmit = (sParams: URLSearchParams) => {
+    sParams.delete("page");
+    if (sParams.get("name")) {
+      sParams.delete("client_id");
+      sParams.delete("clm_id");
+    }
+    if (sParams.get("model")) sParams.delete("clm_id");
+    setSearchParams(sParams);
   };
   const onFormReset = () => {
     setSearchParams({});
@@ -84,13 +93,18 @@ export const ClientsPage = () => {
       <p className="pb-3 has-text-weight-bold is-size-5">
         Поля для запроса в базу данных:
       </p>
-		<div className="column has-background-white-bis">
-      <ClientsSearchForm
-        searchParams={searchParams}
-        onSubmit={onFormSubmit}
-        onReset={onFormReset}
-      />
-		</div>
+      <div className="column is-8 has-background-white-bis">
+        <ByClientAuto
+          clientID={searchParams.get("client_id")}
+          clmID={searchParams.get("clm_id")}
+          asyncReturn={asyncClients}
+        />
+        <ClientsSearchForm
+          searchParams={searchParams}
+          onSubmit={onFormSubmit}
+          onReset={onFormReset}
+        />
+      </div>
       {asyncClients.loading && <DivSpinner />}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (
@@ -110,6 +124,62 @@ export const ClientsPage = () => {
   );
 };
 
+export const ByClientAuto = (props: {
+  clientID: string | null;
+  clmID: string | null;
+  asyncReturn: UseAsyncReturn<clientsFetchResult | undefined>;
+}) => {
+  const notFound = (obj: string, id: string | null) => (
+    <span className="has-text-danger">{`${obj} с id ${id} не найдено`}</span>
+  );
+  const clientID = props.clientID;
+  const clmID = props.clmID;
+  const { result, error, loading } = props.asyncReturn;
+  const getClName = () => {
+    if (result && result.data && result.data[0]) {
+      return (
+        <span className="is-size-6 has-text-info">
+          {result.data[0].nameindir}
+        </span>
+      );
+    } else {
+      return notFound("клиента", clientID);
+    }
+  };
+  const getCarName = () => {
+    if (result && result.data && result.data[0] && result.data[0].cars) {
+      return (
+        <span className="is-size-6 has-text-info">
+          {result.data[0].cars[0].model}
+        </span>
+      );
+    } else {
+      return notFound("автомобиля клиента", clmID);
+    }
+  };
+  if (clientID || clmID) {
+    return (
+      <div className="columns">
+        {result && (
+          <>
+            {(clientID || clmID) && (
+              <div className="column">
+                <strong>По клиенту: {getClName()}</strong>
+              </div>
+            )}
+            {clmID && (
+              <div className="column">
+                <strong>Только а\м: {getCarName()}</strong>
+              </div>
+            )}
+          </>
+        )}
+        {error && <ErrorMessage text={error.message} />}
+        {loading && <DivSpinner />}
+      </div>
+    );
+  } else return null;
+};
 const ClientsSearchForm = (props: SearchFormProps) => {
   const initValues = {
     name: "",
@@ -185,7 +255,7 @@ const ClientsSearchForm = (props: SearchFormProps) => {
   );
 };
 
-const ResultsTable = (props: { fetchResult: fetchResult }) => {
+const ResultsTable = (props: { fetchResult: clientsFetchResult }) => {
   const heads = [
     "Имя в справочнике",
     "Телефоны",
@@ -194,7 +264,7 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
     "Примечание",
   ];
   const [showDetails, setShowDetails] = useState(false);
-  const total = props.fetchResult.data ? props.fetchResult.data.length: 0;
+  const total = props.fetchResult.data ? props.fetchResult.data.length : 0;
   if (total === 0) {
     return (
       <p className="has-background-grey has-text-centered is-size-5">
@@ -224,13 +294,11 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
             ))}
           </tr>
         </thead>
-		<tfoot className="">
-		<tr className="mainthead">
-            <th  colSpan={10}>
-              {`Всего: ${total}`}
-            </th>
-		</tr>
-		</tfoot>
+        <tfoot className="">
+          <tr className="mainthead">
+            <th colSpan={10}>{`Всего: ${total}`}</th>
+          </tr>
+        </tfoot>
         <tbody>
           {props.fetchResult.data.length > 0 ? (
             <Clients
@@ -265,7 +333,7 @@ const ClientRender = (props: { client: Client; gShowDetails: boolean }) => {
     closed: !showDetailes,
     "is-clickable": true,
   });
-  
+
   useEffect(() => {
     setShowDetails(props.gShowDetails);
   }, [props.gShowDetails]);
@@ -274,23 +342,24 @@ const ClientRender = (props: { client: Client; gShowDetails: boolean }) => {
       <tr className="has-text-weight-semibold">
         <td className="wide">
           <div className={`dropdown is-hoverable`}>
-            <div className="is-clickable" >
-              {props.client.nameindir}
-            </div>
+            <div className="is-clickable">{props.client.nameindir}</div>
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
-                <a href={"narads?client_id=" + props.client.id} className="dropdown-item">
+                <a
+                  href={"narads?client_id=" + props.client.id}
+                  className="dropdown-item"
+                >
                   {`История по клиенту ${props.client.nameindir}`}
                 </a>
               </div>
             </div>
           </div>
-              <span
-                className={closeOrOpenCls}
-                onClick={() => {
-                  setShowDetails((prevState) => !prevState);
-                }}
-              ></span>
+          <span
+            className={closeOrOpenCls}
+            onClick={() => {
+              setShowDetails((prevState) => !prevState);
+            }}
+          ></span>
         </td>
         <td className="wide">
           <span>
@@ -338,17 +407,20 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
           <tr key={car.id} className={clsName}>
             <td>{index + 1}</td>
             <td>
-			<div className="dropdown is-hoverable is-clickable">
-			{car.model}
-            <div className="dropdown-menu" id="dropdown-menu" role="menu">
-              <div className="dropdown-content">
-                <a href={"narads?clm_id=" + car.id} className="dropdown-item">
-                  {`История по автомобилю ${car.model}`}
-                </a>
+              <div className="dropdown is-hoverable is-clickable">
+                {car.model}
+                <div className="dropdown-menu" id="dropdown-menu" role="menu">
+                  <div className="dropdown-content">
+                    <a
+                      href={"narads?clm_id=" + car.id}
+                      className="dropdown-item"
+                    >
+                      {`История по автомобилю ${car.model}`}
+                    </a>
+                  </div>
+                </div>
               </div>
-            </div>
-			</div>
-			</td>
+            </td>
             <td>{car.vin}</td>
             <td>{car.regno}</td>
             <td>
@@ -383,7 +455,9 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
           <td>Примечания</td>
         </tr>
       </thead>
-      <tbody>{props.cars && props.cars.length > 0 ? carRows() : <EmptyRow />}</tbody>
+      <tbody>
+        {props.cars && props.cars.length > 0 ? carRows() : <EmptyRow />}
+      </tbody>
     </table>
   );
 };

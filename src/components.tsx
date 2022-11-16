@@ -215,7 +215,6 @@ export const SearchForm = (props: SearchFormProps) => {
 
   const getSearchParam = (values: Values) => {
     //Add params only if they not empty
-    //const res = new URLSearchParams()
     Object.keys(values).forEach((key) => {
       let val = values[key as keyof Values];
       if (val) {
