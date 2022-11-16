@@ -1,8 +1,10 @@
-import classNames from "classnames/bind";
+import classNames from "classnames";
 import { Field } from "formik";
 import { Fragment, ReactElement, useEffect, useState } from "react";
 import { useAsyncAbortable } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faWarehouse, faBars } from '@fortawesome/free-solid-svg-icons'
 import { fetchAPI } from "./api";
 import { useAsyncFetchClients, ByClientAuto } from "./Clients";
 import {
@@ -373,7 +375,9 @@ const NaradRender = ({
         </td>
         <td className="wide">
           <div className={`dropdown is-hoverable`}>
-            <div className="is-clickable">{narad.dcl.nameindir}</div>
+            <span className="is-clickable">
+			{narad.dcl.nameindir}
+			</span>
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
                 <a
@@ -453,14 +457,25 @@ const NaradGoods = ({
   ngoods_ids: number[];
 }) => {
   const goods = () => {
+  	const soughtFor = (id: number) => {
+  	if (!ngoods_ids) return false
+		return ngoods_ids.includes(id)
+  	} 
     return (
       ngoods &&
       ngoods.map((ng, index) => {
-        const clsName = classNames({ soughtFor: ngoods_ids.includes(ng.id) });
+        const clsName = classNames({ soughtFor: soughtFor(ng.id) });
         return (
           <tr key={ng.id} className={clsName}>
             <td>{index + 1}</td>
-            <td>{ng.goods_card ? ng.goods_card.goodsname : ng.goodname}</td>
+            <td>
+			<span  className="icon-text">
+			{ng.goods_card && <span className="icon"><FontAwesomeIcon icon={faWarehouse}/></span>}
+			<span>
+			{ng.goods_card ? ng.goods_card.goodsname : ng.goodname}
+			</span>
+			</span>
+			</td>
             <td>{ng.goods_card ? ng.goods_card.articul : ng.goodnumber}</td>
             <td>{ng.amount}</td>
             <td>{ng.price}</td>

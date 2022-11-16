@@ -1,7 +1,15 @@
-import classNames from "classnames/bind";
+import classNames from "classnames";
 import { Formik } from "formik";
-import { FC, ReactElement, ReactNode, InputHTMLAttributes } from "react";
+import {
+  FC,
+  ReactElement,
+  ReactNode,
+  useState,
+  InputHTMLAttributes,
+} from "react";
 import { Link, LinkProps, useMatch, useResolvedPath } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBars } from "@fortawesome/free-solid-svg-icons";
 
 type THeadsProps = {
   name: string;
@@ -29,6 +37,31 @@ export const CustomLink = ({ children, to, ...props }: LinkProps) => {
         {children}
       </Link>
     </li>
+  );
+};
+export const DivWithMenu = (props: { headText: string; children: ReactNode }) => {
+  const [isActive, setIsActive] = useState(false);
+  const className = classNames({
+    "dropdown": true,
+    "is-active": isActive,
+  })
+  return (
+    <div className={className}>
+      <span className="icon-text">{props.headText}</span>
+      <span
+        className="icon"
+        onClick={() => {
+          setIsActive((prevState) => !prevState);
+        }}
+      >
+        <FontAwesomeIcon icon={faBars} />
+      </span>
+      <div className="dropdown-menu" id="dropdown-menu" role="menu">
+        <div className="dropdown-content">
+          {props.children}
+        </div>
+      </div>
+    </div>
   );
 };
 export const Table: FC<TProps> = (props) => {
