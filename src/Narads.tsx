@@ -4,7 +4,7 @@ import { Fragment, ReactElement, useEffect, useState } from "react";
 import { useAsyncAbortable } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faWarehouse, faBars } from '@fortawesome/free-solid-svg-icons'
+import { faWarehouse} from '@fortawesome/free-solid-svg-icons'
 import { fetchAPI } from "./api";
 import { useAsyncFetchClients, ByClientAuto } from "./Clients";
 import {
@@ -147,11 +147,10 @@ export const NaradsPage = (): ReactElement => {
     searchParams.set("page", page.toString());
     setSearchParams(searchParams);
   };
-
   return (
     <div className="block">
       <p className="pb-3 has-text-weight-bold is-size-5">Поиск заказ-нарядов</p>
-		<div className="column is-8 has-background-white-bis">
+		<div className="column has-background-white-bis">
         <ByClientAuto
           clientID={clientID}
           clmID={clmID}
@@ -170,18 +169,20 @@ export const NaradsPage = (): ReactElement => {
           <div className="has-text-weight-bold is-size-4">
             Результаты запроса:{" "}
           </div>
+          <ResultsTable fetchResult={asyncNarads.result} 
+		  pagination={
           <Pagination
             setPage={setPage}
             curPage={asyncNarads.result.page}
             totalPages={asyncNarads.result.pages}
-          />
-          <ResultsTable fetchResult={asyncNarads.result} />
+          />}
+			  />
         </div>
       )}
     </div>
   );
 };
-const ResultsTable = (props: { fetchResult: fetchResult }) => {
+const ResultsTable = (props: { fetchResult: fetchResult, pagination:ReactElement }) => {
   const heads = ["N°", "Клиент", "Автомобиль", "VIN", "Гос. номер" , "Дата и время открытия"];
   const [showDetails, setShowDetails] = useState(false);
   const total = props.fetchResult.data.length;
@@ -196,6 +197,11 @@ const ResultsTable = (props: { fetchResult: fetchResult }) => {
     <div className="table-container">
       <table className="table is-bordered is-narrow is-hoverable ">
         <thead>
+		<tr>
+		<td className="noborder" colSpan={10}>
+		{props.pagination}
+		</td>
+		</tr>
           <tr>
             <td className="noborder" colSpan={2}>
               <ShowDetailToggle

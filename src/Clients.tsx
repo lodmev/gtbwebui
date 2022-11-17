@@ -58,20 +58,20 @@ type Car = {
   model: string;
   bodytype: string;
 };
-export const useAsyncFetchClients = (searchString: string) =>{ 
-	 return useAsyncAbortable(
+export const useAsyncFetchClients = (searchString: string) => {
+  return useAsyncAbortable(
     async (abortSignal, searchString) => {
       if (searchString === "") return;
       return fetchClients("clients?" + searchString, abortSignal);
     },
     [searchString]
   );
-  }
+};
 
 export const ClientsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchString = searchParams.toString();
-  const asyncClients = useAsyncFetchClients(searchString)
+  const asyncClients = useAsyncFetchClients(searchString);
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
     if (sParams.get("name")) {
@@ -93,7 +93,7 @@ export const ClientsPage = () => {
       <p className="pb-3 has-text-weight-bold is-size-5">
         Поля для запроса в базу данных:
       </p>
-      <div className="column is-8 has-background-white-bis">
+      <div className="column has-background-white-bis">
         <ByClientAuto
           clientID={searchParams.get("client_id")}
           clmID={searchParams.get("clm_id")}
@@ -105,6 +105,8 @@ export const ClientsPage = () => {
           onReset={onFormReset}
         />
       </div>
+	  {(!asyncClients.loading && !asyncClients.result && !asyncClients.error) &&
+	  <div>Данные не загружались</div>}
       {asyncClients.loading && <DivSpinner />}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (
@@ -256,13 +258,7 @@ const ClientsSearchForm = (props: SearchFormProps) => {
 };
 
 const ResultsTable = (props: { fetchResult: clientsFetchResult }) => {
-  const heads = [
-    "Имя в справочнике",
-    "Телефоны",
-    "eMail",
-    "Скидки",
-    "Примечание",
-  ];
+  const heads = ["Имя в справочнике", "Телефоны", "eMail", "Скидки"];
   const [showDetails, setShowDetails] = useState(false);
   const total = props.fetchResult.data ? props.fetchResult.data.length : 0;
   if (total === 0) {
@@ -378,10 +374,13 @@ const ClientRender = (props: { client: Client; gShowDetails: boolean }) => {
           <span>{`На запчасти: ${props.client.goodsdiscount || 0}%; `}</span>
           <span>{`На работы: ${props.client.workdiscount || 0}%`}</span>
         </td>
-        <td>{props.client.notes}</td>
       </tr>
       <tr style={showDetailes ? {} : { display: "none" }}>
         <td colSpan={5}>
+          <div className="notes">
+            <span>Примечания: </span>
+            {props.client.notes}
+          </div>
           <div>
             {props.client.cars && (
               <ClientCars
