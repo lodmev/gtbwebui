@@ -397,11 +397,11 @@ const NaradRender = ({
     );
     const rubCapitilized = rub ? "(" + rub.charAt(0).toUpperCase() + rub.slice(1) + ")" : ''
     return (
-      <ul className="has-text-weight-bold has-background-grey-lighter mb-2 is-flex is-flex-wrap-wrap">
-        <li>Общая стоимоть:&nbsp;</li>
-        <li>{finalCost.toFixed(2)}&nbsp;</li>
-        <li>{rubCapitilized}</li>
-      </ul>
+      <div className="has-text-weight-bold has-background-grey-lighter mb-2 is-flex is-flex-wrap-wrap">
+        <div>Общая стоимоть:&nbsp;</div>
+        <div>{finalCost.toFixed(2)}&nbsp;</div>
+        <div>{rubCapitilized}</div>
+      </div>
     );
   };
   useEffect(() => {
@@ -574,7 +574,7 @@ const NaradGoods = ({
     );
   };
   return (
-    <table className="table is-narrow mb-2">
+    <table className="table is-narrow">
       <caption className="has-text-left has-text-weight-medium has-text-black has-background-grey-lighter">
         Запасные части и материалы:
       </caption>
@@ -649,7 +649,7 @@ const NaradWorks = ({
     });
   };
   return (
-    <table className="table is-narrow ">
+    <table className="table is-narrow mb-2">
       <caption className="has-text-left has-text-weight-medium has-text-black has-background-grey-lighter">
         Работы:
       </caption>
