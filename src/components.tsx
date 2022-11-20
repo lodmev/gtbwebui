@@ -151,10 +151,10 @@ export const Pagination = (props: {
   };
   return (
     <>
-      <div className="block" style={{ padding: "inherit" }}>
+      <div className="block column is-7" style={{ padding: "inherit" }}>
         {totalPages > 1 && (
           <div className="block tag is-info">
-            Отобрано результатов на&nbsp;
+            Отобраны результатов на&nbsp;
             <strong>{totalPages}</strong>
             &nbsp;страницах:
           </div>

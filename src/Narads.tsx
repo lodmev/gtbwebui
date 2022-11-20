@@ -3,8 +3,9 @@ import { Field } from "formik";
 import { Fragment, ReactElement, useEffect, useState } from "react";
 import { useAsyncAbortable } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faWarehouse} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWarehouse } from "@fortawesome/free-solid-svg-icons";
+import { rubles } from "rubles";
 import { fetchAPI } from "./api";
 import { useAsyncFetchClients, ByClientAuto } from "./Clients";
 import {
@@ -31,15 +32,17 @@ type Narad = {
     id: number;
     nameindir: string;
   };
+  description: string;
+  gooddiscount: number;
   ngoods: naradGood[];
   ngoods_ids: number[];
-  notes:string;
+  notes: string;
   nworks: naradWork[];
   nworks_ids: number[];
   mark: number;
   time1: number;
-  recommendations:string;
-  runrepair: number;
+  recommendations: string;
+  run: number;
 };
 type naradGood = {
   id: number;
@@ -74,6 +77,11 @@ type fetchResult = {
   pages: number;
   total_items: number;
 };
+type priceDiscount = {
+  discount: number;
+  finalPrice: number;
+  setFP: React.Dispatch<React.SetStateAction<number>>;
+};
 const fetchNarads = (
   uri: string,
   abortSignal?: AbortSignal
@@ -82,42 +90,51 @@ const fetchNarads = (
 const getMark = (m: number) => {
   switch (m) {
     case 0:
-      return { color: "grey" };
+      return {};
     case 1:
       return {
         backgroundColor: "green",
-        color: "lightgrey",
       };
     case 2:
       return {
-        backgroundColor: "blue",
-        color: "lightgrey",
+        backgroundColor: "#859bff",
       };
     case 3:
       return {
         backgroundColor: "red",
-        color: "lightgrey",
       };
     case 4:
       return {
         backgroundColor: "yellow",
-        color: "lightgrey",
       };
     case 5:
       return {
         backgroundColor: "lightseagreen",
-        color: "lightgrey",
       };
     case 6:
       return {
         backgroundColor: "grey",
-        color: "lightgrey",
       };
     default:
       return {};
   }
 };
+const useFinalPrice = (priceDiscount: priceDiscount, total: number) => {
+  useEffect(() => {
+    priceDiscount.setFP(total - (total * priceDiscount.discount) / 100);
+  }, [priceDiscount,total]);
+};
+// Create our number formatter.
+/*
+const formatter = new Intl.NumberFormat(undefined, {
+  style: "currency",
+  currency: "RUB",
 
+  // These options are needed to round to whole numbers if that's what you want.
+  //minimumFractionDigits: 0, // (this suffices for whole numbers, but will print 2500.10 as $2,500.1)
+  //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
+});
+*/
 export const NaradsPage = (): ReactElement => {
   const [searchParams, setSearchParams] = useSearchParams();
   const asyncNarads = useAsyncAbortable(
@@ -129,8 +146,10 @@ export const NaradsPage = (): ReactElement => {
   );
   const clientID = searchParams.get("client_id");
   const clmID = searchParams.get("clm_id");
-  const searchClientString = `${clientID ? "client_id="+clientID:""}${clmID ? "&clm_id="+clmID :""}`
-  const asyncClients = useAsyncFetchClients(searchClientString)
+  const searchClientString = `${clientID ? "client_id=" + clientID : ""}${
+    clmID ? "&clm_id=" + clmID : ""
+  }`;
+  const asyncClients = useAsyncFetchClients(searchClientString);
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
     if (sParams.get("cl_name")) {
@@ -150,18 +169,18 @@ export const NaradsPage = (): ReactElement => {
   return (
     <div className="block">
       <p className="pb-3 has-text-weight-bold is-size-5">Поиск заказ-нарядов</p>
-		<div className="column has-background-white-bis">
+      <div className="column has-background-white-bis">
         <ByClientAuto
           clientID={clientID}
           clmID={clmID}
           asyncReturn={asyncClients}
         />
-      <NaradsSearchForm
-        searchParams={searchParams}
-        onSubmit={onFormSubmit}
-        onReset={onFormReset}
-      />
-		</div>
+        <NaradsSearchForm
+          searchParams={searchParams}
+          onSubmit={onFormSubmit}
+          onReset={onFormReset}
+        />
+      </div>
       {asyncNarads.loading && <DivSpinner />}
       {asyncNarads.error && <ErrorMessage text={asyncNarads.error.message} />}
       {asyncNarads.result && (
@@ -169,21 +188,26 @@ export const NaradsPage = (): ReactElement => {
           <div className="has-text-weight-bold is-size-4">
             Результаты запроса:{" "}
           </div>
-          <ResultsTable fetchResult={asyncNarads.result} 
-		  pagination={
           <Pagination
             setPage={setPage}
             curPage={asyncNarads.result.page}
             totalPages={asyncNarads.result.pages}
-          />}
-			  />
+          />
+          <ResultsTable fetchResult={asyncNarads.result} />
         </div>
       )}
     </div>
   );
 };
-const ResultsTable = (props: { fetchResult: fetchResult, pagination:ReactElement }) => {
-  const heads = ["N°", "Клиент", "Автомобиль", "VIN", "Гос. номер" , "Дата и время открытия"];
+const ResultsTable = (props: { fetchResult: fetchResult }) => {
+  const heads = [
+    "N°",
+    "Клиент",
+    "Автомобиль",
+    "VIN",
+    "Гос. номер",
+    "Дата и время открытия",
+  ];
   const [showDetails, setShowDetails] = useState(false);
   const total = props.fetchResult.data.length;
   if (total === 0) {
@@ -197,11 +221,6 @@ const ResultsTable = (props: { fetchResult: fetchResult, pagination:ReactElement
     <div className="table-container">
       <table className="table is-bordered is-narrow is-hoverable ">
         <thead>
-		<tr>
-		<td className="noborder" colSpan={10}>
-		{props.pagination}
-		</td>
-		</tr>
           <tr>
             <td className="noborder" colSpan={2}>
               <ShowDetailToggle
@@ -236,7 +255,6 @@ const ResultsTable = (props: { fetchResult: fetchResult, pagination:ReactElement
     </div>
   );
 };
-
 
 const NaradsSearchForm = (props: SearchFormProps) => {
   const initValues = {
@@ -354,20 +372,52 @@ const NaradRender = ({
   gShowDetails: boolean;
 }) => {
   const [showDetailes, setShowDetails] = useState(false);
+  const [workFinalPrice, setWorkFP] = useState(0);
+  const [goodsFinalPrice, setGoodsFP] = useState(0);
   const closeOrOpenCls = classNames({
     open: showDetailes,
     closed: !showDetailes,
     "is-clickable": true,
   });
+  const goodsPriceDiscount = {
+    discount: narad.gooddiscount,
+    finalPrice: goodsFinalPrice,
+    setFP: setGoodsFP,
+  };
+  const worksPriceDiscount = {
+    discount: narad.gooddiscount,
+    finalPrice: workFinalPrice,
+    setFP: setWorkFP,
+  };
+  const bill = () => {
+    const finalCost =
+      goodsPriceDiscount.finalPrice + worksPriceDiscount.finalPrice;
+    const rub = rubles(
+      goodsPriceDiscount.finalPrice + worksPriceDiscount.finalPrice
+    );
+    const rubCapitilized = rub ? "(" + rub.charAt(0).toUpperCase() + rub.slice(1) + ")" : ''
+    return (
+      <ul className="has-text-weight-bold has-background-grey-lighter mb-2 is-flex is-flex-wrap-wrap">
+        <li>Общая стоимоть:&nbsp;</li>
+        <li>{finalCost.toFixed(2)}&nbsp;</li>
+        <li>{rubCapitilized}</li>
+      </ul>
+    );
+  };
   useEffect(() => {
     setShowDetails(gShowDetails);
   }, [gShowDetails]);
-  const dDItemsCls = "dropdown-item is-size-7"
-  const displayProp = ()=> { return showDetailes ? {} : { display: "none" } }
+  const dDItemsCls = "dropdown-item is-size-7";
+  const displayProp = () => {
+    return showDetailes ? {} : { display: "none" };
+  };
   return (
     <Fragment key={narad.id}>
       <tr className="has-text-weight-semibold">
-        <td className="litle-wide" style={getMark(narad.mark)}>
+        <td
+          className="litle-wide has-text-weight-bold"
+          style={getMark(narad.mark)}
+        >
           <div>
             {narad.docnumber}
             <span
@@ -381,9 +431,7 @@ const NaradRender = ({
         </td>
         <td className="wide">
           <div className={`dropdown is-hoverable`}>
-            <span className="is-clickable">
-			{narad.dcl.nameindir}
-			</span>
+            <span className="is-clickable">{narad.dcl.nameindir}</span>
             <div className="dropdown-menu" id="dropdown-menu" role="menu">
               <div className="dropdown-content">
                 <a
@@ -413,7 +461,7 @@ const NaradRender = ({
                 >
                   {`История по этому ${narad.clm.model}`}
                 </a>
-				<a
+                <a
                   href={`clients?clm_id=${narad.clm.id}&client_id=${narad.dcl.id}`}
                   className={dDItemsCls}
                 >
@@ -424,76 +472,110 @@ const NaradRender = ({
           </div>
         </td>
         <td className="bitwide">{narad.clm.vin}</td>
-        <td >{narad.clm.regno}</td>
+        <td>{narad.clm.regno}</td>
         <td className="">
           {`${new Date(narad.date1).toLocaleDateString()} ${narad.time1}`}
         </td>
       </tr>
       <tr style={displayProp()}>
         <td colSpan={10}>
-	  <div className="notes">
-	  <span >Примечания: </span>
-	  {narad.notes}
-	  </div>
-	  
-          <div>
-            {narad.ngoods && (
-              <NaradGoods ngoods={narad.ngoods} ngoods_ids={narad.ngoods_ids} />
-            )}
-            {narad.nworks && <NaradWorks nworks={narad.nworks} nworks_ids={narad.nworks_ids} />}
+          <div className="notes">
+            <span>Особые данные: </span>
+            {narad.notes}
           </div>
-	  <div className="notes">
-	  <span>Пробег: </span>
-	  {`${narad.runrepair === 0 ? "": narad.runrepair + " км;"}`}
-	  </div>
-	  <div className="notes">
-	  <span>Рекомендации: </span>
-	  {narad.recommendations}
-	  </div>
+          <div className="notes">
+            <span>Примечание: </span>
+            {narad.description}
+          </div>
+
+          <div>
+            {narad.nworks && (
+              <NaradWorks
+                nworks={narad.nworks}
+                nworks_ids={narad.nworks_ids}
+                priceDiscount={worksPriceDiscount}
+              />
+            )}
+            {narad.ngoods && (
+              <NaradGoods
+                ngoods={narad.ngoods}
+                ngoods_ids={narad.ngoods_ids}
+                priceDiscount={goodsPriceDiscount}
+              />
+            )}
+          </div>
+          <div className="notes">
+            <span>Пробег: </span>
+            {`${narad.run === 0 ? "" : narad.run + " км;"}`}
+          </div>
+          <div className="notes">
+            <span>Рекомендации: </span>
+            {narad.recommendations}
+          </div>
+          {bill()}
         </td>
-	  </tr>
+      </tr>
     </Fragment>
   );
 };
 const NaradGoods = ({
   ngoods,
   ngoods_ids,
+  priceDiscount,
 }: {
   ngoods: naradGood[];
   ngoods_ids: number[];
+  priceDiscount: priceDiscount;
 }) => {
-  const goods = () => {
-  	const soughtFor = (id: number) => {
-  	if (!ngoods_ids) return false
-		return ngoods_ids.includes(id)
-  	} 
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  useFinalPrice(priceDiscount, totalPrice);
+
+  const Goods = () => {
+    let totalIt = 0;
+    let totalPr = 0;
+    useEffect(() => {
+      setTotalItems(totalIt);
+      setTotalPrice(totalPr);
+    });
+    const soughtFor = (id: number) => {
+      if (!ngoods_ids) return false;
+      return ngoods_ids.includes(id);
+    };
     return (
       ngoods &&
       ngoods.map((ng, index) => {
         const clsName = classNames({ soughtFor: soughtFor(ng.id) });
+        const sum = ng.price * ng.amount;
+        totalIt += ng.amount;
+        totalPr += sum;
         return (
           <tr key={ng.id} className={clsName}>
             <td>{index + 1}</td>
             <td>
-			<span  className="icon-text">
-			{ng.goods_card && <span className="icon"><FontAwesomeIcon icon={faWarehouse}/></span>}
-			<span>
-			{ng.goods_card ? ng.goods_card.goodsname : ng.goodname}
-			</span>
-			</span>
-			</td>
+              <span className="icon-text">
+                {ng.goods_card && (
+                  <span className="icon">
+                    <FontAwesomeIcon icon={faWarehouse} />
+                  </span>
+                )}
+                <span>
+                  {ng.goods_card ? ng.goods_card.goodsname : ng.goodname}
+                </span>
+              </span>
+            </td>
             <td>{ng.goods_card ? ng.goods_card.articul : ng.goodnumber}</td>
-            <td>{ng.amount}</td>
-            <td>{ng.price}</td>
-            <td>{ng.price * ng.amount}</td>
+            <td>{ng.amount.toFixed(2)}</td>
+            <td>{ng.price.toFixed(2)}</td>
+            <td>{sum.toFixed(2)}</td>
           </tr>
         );
       })
     );
   };
   return (
-    <table className="table is-narrow ">
-      <caption className="has-text-left has-text-weight-medium has-text-white has-background-grey-light">
+    <table className="table is-narrow mb-2">
+      <caption className="has-text-left has-text-weight-medium has-text-black has-background-grey-lighter">
         Запасные части и материалы:
       </caption>
       <thead>
@@ -506,31 +588,69 @@ const NaradGoods = ({
           <td>Сумма</td>
         </tr>
       </thead>
-      <tbody>{ngoods.length > 0 ? goods() : <EmptyRow />}</tbody>
+      <tbody>{ngoods.length > 0 ? Goods() : <EmptyRow />}</tbody>
+      {ngoods.length > 0 && (
+        <tfoot>
+          <tr className="has-text-weight-semibold">
+            <td colSpan={3} className="has-text-right">
+              Итого:
+            </td>
+            <td>{totalItems.toFixed(2)}</td>
+            <td className="noborder"></td>
+            <td>{totalPrice.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td colSpan={10} className="">
+              <div className="is-italic is-size-7">
+                <span>Скидка: </span>
+                <span>{priceDiscount.discount}%</span>
+              </div>
+              <div className="has-text-weight-semibold">
+                <span>Стоимость запасных частей: </span>
+                <span>{priceDiscount.finalPrice.toFixed(2)}</span>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      )}
     </table>
   );
 };
-const NaradWorks = ({ nworks, nworks_ids }: { nworks: naradWork[], nworks_ids: Narad["nworks_ids"]}) => {
-  //	const headClass = 'column has-text-info has-text-weight-medium'
-  	const soughtFor = (id: number) => {
-  	if (!nworks_ids) return false
-		return nworks_ids.includes(id)
-  	} 
-  const works = () => {
-	  return nworks.map((nw, index) => {
-        const clsName = classNames({ soughtFor: soughtFor(nw.id) });
-		     return <tr className={clsName} key={nw.id}>
-			  <td>{index + 1}</td>
-			  <td>{nw.workname}</td>
-			  <td>{nw.timevalue}</td>
-			  <td>{nw.finalprice}</td>
-			  <td>{nw.worker.workername}</td>
-			  </tr>
-			  });
+const NaradWorks = ({
+  nworks,
+  nworks_ids,
+  priceDiscount,
+}: {
+  nworks: naradWork[];
+  nworks_ids: Narad["nworks_ids"];
+  priceDiscount: priceDiscount;
+}) => {
+  const [totalPrice, setTotalPrice] = useState(0);
+  useFinalPrice(priceDiscount, totalPrice);
+  const soughtFor = (id: number) => {
+    if (!nworks_ids) return false;
+    return nworks_ids.includes(id);
+  };
+  const Works = () => {
+    let totalPr = 0;
+	useEffect(()=> {setTotalPrice(totalPr)})
+    return nworks.map((nw, index) => {
+      const clsName = classNames({ soughtFor: soughtFor(nw.id) });
+      totalPr += nw.finalprice;
+      return (
+        <tr className={clsName} key={nw.id}>
+          <td>{index + 1}</td>
+          <td>{nw.workname}</td>
+          <td>{nw.timevalue}</td>
+          <td>{nw.finalprice}</td>
+          <td>{nw.worker.workername}</td>
+        </tr>
+      );
+    });
   };
   return (
     <table className="table is-narrow ">
-      <caption className="has-text-left has-text-weight-medium has-text-white-bis has-background-grey-light">
+      <caption className="has-text-left has-text-weight-medium has-text-black has-background-grey-lighter">
         Работы:
       </caption>
       <thead>
@@ -542,7 +662,29 @@ const NaradWorks = ({ nworks, nworks_ids }: { nworks: naradWork[], nworks_ids: N
           <td>Исполнитель</td>
         </tr>
       </thead>
-      <tbody>{nworks.length > 0 ? works() : <EmptyRow />}</tbody>
+      <tbody>{nworks.length > 0 ? Works() : <EmptyRow />}</tbody>
+      {nworks.length > 0 && (
+        <tfoot>
+          <tr className="has-text-weight-semibold">
+            <td colSpan={3} className="has-text-right">
+              Итого:
+            </td>
+            <td>{totalPrice}</td>
+          </tr>
+          <tr>
+            <td colSpan={10} className="">
+              <div className="is-italic is-size-7">
+                <span>Скидка: </span>
+                <span>{priceDiscount.discount}%</span>
+              </div>
+              <div className="has-text-weight-semibold">
+                <span>Стоимость ремонтных работ: </span>
+                <span>{priceDiscount.finalPrice.toFixed(2)}</span>
+              </div>
+            </td>
+          </tr>
+        </tfoot>
+      )}
     </table>
   );
 };

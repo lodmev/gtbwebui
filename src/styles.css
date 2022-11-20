@@ -51,16 +51,22 @@ hr.blank {
 .soughtFor {
   font-weight: 600;
 }
+
 .notes {
-  padding: 0.75rem;
   padding-left: 2.5rem;
   font-weight: 500;
 }
-.notes:last-child {
+.notes:first-child {
     padding-top: 0rem;
 }
 .notes span {
   font-style: italic;
+}
+.rubles {
+	display: inline-block;
+}
+.rubles::first-letter{
+text-transform: uppercase;
 }
 .working:after {
   content: "\1F4BC";

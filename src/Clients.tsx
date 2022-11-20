@@ -106,7 +106,7 @@ export const ClientsPage = () => {
         />
       </div>
 	  {(!asyncClients.loading && !asyncClients.result && !asyncClients.error) &&
-	  <div>Данные не загружались</div>}
+	  <p className="has-background-grey-lighter has-text-centered is-size-5">Данные из БД не запрашивались</p>}
       {asyncClients.loading && <DivSpinner />}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (
