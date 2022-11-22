@@ -6,8 +6,8 @@ import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faWarehouse } from "@fortawesome/free-solid-svg-icons";
 import { rubles } from "rubles";
-import { fetchAPI } from "./api";
-import { useAsyncFetchClients, ByClientAuto } from "./Clients";
+import { fetchAPI, paginationFetchResult, useAsyncFetchResult } from "./api";
+import { ByClientAuto, Client } from "./Clients";
 import {
   DivSpinner,
   ErrorMessage,
@@ -128,7 +128,7 @@ const useFinalPrice = (priceDiscount: priceDiscount, total: number) => {
     priceDiscount.setFP(total - (total * priceDiscount.discount) / 100);
   }, [priceDiscount, total]);
 };
-// Create our number formatter.
+// Create ruble currency number formatter.
 /*
 const formatter = new Intl.NumberFormat(undefined, {
   style: "currency",
@@ -153,7 +153,7 @@ export const NaradsPage = (): ReactElement => {
   const searchClientString = `${clientID ? "client_id=" + clientID : ""}${
     clmID ? "&clm_id=" + clmID : ""
   }`;
-  const asyncClients = useAsyncFetchClients(searchClientString);
+  const asyncClients = useAsyncFetchResult<paginationFetchResult<Client>>("clients?", searchClientString);
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
     if (sParams.get("cl_name")) {

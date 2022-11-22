@@ -1,9 +1,9 @@
 import classNames from "classnames";
 import { Field } from "formik";
 import { Fragment, useEffect, useState } from "react";
-import { useAsyncAbortable, UseAsyncReturn } from "react-async-hook";
+import { UseAsyncReturn } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
-import { fetchAPI } from "./api";
+import { paginationFetchResult, useAsyncFetchResult } from "./api";
 import {
   DivSpinner,
   ErrorMessage,
@@ -13,18 +13,7 @@ import {
   ShowDetailToggle,
 } from "./components";
 
-type clientsFetchResult = {
-  data: Client[];
-  page: number;
-  pages: number;
-  total_items: number;
-};
-export const fetchClients = (
-  uri: string,
-  abortSignal?: AbortSignal
-): Promise<clientsFetchResult> => fetchAPI(uri, abortSignal);
-
-type Client = {
+export type Client = {
   cars: Car[];
   cars_ids: number[];
   email: string;
@@ -58,20 +47,11 @@ type Car = {
   model: string;
   bodytype: string;
 };
-export const useAsyncFetchClients = (searchString: string) => {
-  return useAsyncAbortable(
-    async (abortSignal, searchString) => {
-      if (searchString === "") return;
-      return fetchClients("clients?" + searchString, abortSignal);
-    },
-    [searchString]
-  );
-};
 
 export const ClientsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const searchString = searchParams.toString();
-  const asyncClients = useAsyncFetchClients(searchString);
+  const asyncClients = useAsyncFetchResult<paginationFetchResult<Client>>("clients?", searchString);
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
     if (sParams.get("name")) {
@@ -129,7 +109,7 @@ export const ClientsPage = () => {
 export const ByClientAuto = (props: {
   clientID: string | null;
   clmID: string | null;
-  asyncReturn: UseAsyncReturn<clientsFetchResult | undefined>;
+  asyncReturn: UseAsyncReturn<paginationFetchResult<Client> | undefined>;
 }) => {
   const notFound = (obj: string, id: string | null) => (
     <span className="has-text-danger">{`${obj} с id ${id} не найдено`}</span>
@@ -257,7 +237,7 @@ const ClientsSearchForm = (props: SearchFormProps) => {
   );
 };
 
-const ResultsTable = (props: { fetchResult: clientsFetchResult }) => {
+const ResultsTable = (props: { fetchResult: paginationFetchResult<Client> }) => {
   const heads = ["Имя в справочнике", "Телефоны", "eMail", "Скидки"];
   const [showDetails, setShowDetails] = useState(false);
   const total = props.fetchResult.data ? props.fetchResult.data.length : 0;
