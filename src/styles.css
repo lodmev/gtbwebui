@@ -65,8 +65,11 @@ hr.blank {
 .rubles {
 	display: inline-block;
 }
-.rubles::first-letter{
-text-transform: uppercase;
+.is-done {
+	color: grey;
+}
+svg.is-done {
+	color: #72f373;
 }
 .working:after {
   content: "\1F4BC";

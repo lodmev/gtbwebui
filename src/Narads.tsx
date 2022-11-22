@@ -4,7 +4,7 @@ import { Fragment, ReactElement, useEffect, useState } from "react";
 import { useAsyncAbortable } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWarehouse } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faWarehouse } from "@fortawesome/free-solid-svg-icons";
 import { rubles } from "rubles";
 import { fetchAPI } from "./api";
 import { useAsyncFetchClients, ByClientAuto } from "./Clients";
@@ -43,6 +43,7 @@ type Narad = {
   time1: number;
   recommendations: string;
   run: number;
+  status: number;
 };
 type naradGood = {
   id: number;
@@ -50,7 +51,8 @@ type naradGood = {
   goodname: string;
   goodnumber: string;
   price: number;
-  goods_card: goodsCard;
+  goods_card: goodsCard | null;
+  oenumber: string | null;
 };
 type naradWork = {
   id: number;
@@ -69,6 +71,8 @@ type goodsCard = {
   id: number;
   goodsname: string;
   articul: string;
+  manufacturernumber: string;
+  originalnumber: string;
 };
 
 type fetchResult = {
@@ -122,7 +126,7 @@ const getMark = (m: number) => {
 const useFinalPrice = (priceDiscount: priceDiscount, total: number) => {
   useEffect(() => {
     priceDiscount.setFP(total - (total * priceDiscount.discount) / 100);
-  }, [priceDiscount,total]);
+  }, [priceDiscount, total]);
 };
 // Create our number formatter.
 /*
@@ -395,7 +399,9 @@ const NaradRender = ({
     const rub = rubles(
       goodsPriceDiscount.finalPrice + worksPriceDiscount.finalPrice
     );
-    const rubCapitilized = rub ? "(" + rub.charAt(0).toUpperCase() + rub.slice(1) + ")" : ''
+    const rubCapitilized = rub
+      ? "(" + rub.charAt(0).toUpperCase() + rub.slice(1) + ")"
+      : "";
     return (
       <div className="has-text-weight-bold has-background-grey-lighter mb-2 is-flex is-flex-wrap-wrap">
         <div>Общая стоимоть:&nbsp;</div>
@@ -407,19 +413,24 @@ const NaradRender = ({
   useEffect(() => {
     setShowDetails(gShowDetails);
   }, [gShowDetails]);
-  const dDItemsCls = "dropdown-item is-size-7";
+  const dpDwnItemsCls = "dropdown-item is-size-7";
+  const isDone = narad.status === 1;
+  const isDoneCls = isDone ? " is-done" : "";
   const displayProp = () => {
     return showDetailes ? {} : { display: "none" };
   };
   return (
     <Fragment key={narad.id}>
-      <tr className="has-text-weight-semibold">
+      <tr className={`has-text-weight-semibold${isDoneCls}`}>
         <td
           className="litle-wide has-text-weight-bold"
           style={getMark(narad.mark)}
         >
           <div>
-            {narad.docnumber}
+              {isDone && (
+                  <FontAwesomeIcon icon={faCheck} className="is-done" title="Выполненный" />
+              )}
+              {narad.docnumber}
             <span
               className={closeOrOpenCls}
               title="Развернуть/Свернуть"
@@ -436,13 +447,13 @@ const NaradRender = ({
               <div className="dropdown-content">
                 <a
                   href={"narads?client_id=" + narad.dcl.id}
-                  className={dDItemsCls}
+                  className={dpDwnItemsCls}
                 >
                   {`История по клиенту ${narad.dcl.nameindir}`}
                 </a>
                 <a
                   href={"clients?client_id=" + narad.dcl.id}
-                  className={dDItemsCls}
+                  className={dpDwnItemsCls}
                 >
                   {`Карточка клиента ${narad.dcl.nameindir}`}
                 </a>
@@ -457,13 +468,13 @@ const NaradRender = ({
               <div className="dropdown-content">
                 <a
                   href={`narads?clm_id=${narad.clm.id}&client_id=${narad.dcl.id}`}
-                  className={dDItemsCls}
+                  className={dpDwnItemsCls}
                 >
                   {`История по этому ${narad.clm.model}`}
                 </a>
                 <a
                   href={`clients?clm_id=${narad.clm.id}&client_id=${narad.dcl.id}`}
-                  className={dDItemsCls}
+                  className={dpDwnItemsCls}
                 >
                   {`Карточка этого ${narad.clm.model}`}
                 </a>
@@ -477,7 +488,7 @@ const NaradRender = ({
           {`${new Date(narad.date1).toLocaleDateString()} ${narad.time1}`}
         </td>
       </tr>
-      <tr style={displayProp()}>
+      <tr className={`${isDoneCls}`} style={displayProp()}>
         <td colSpan={10}>
           <div className="notes">
             <span>Особые данные: </span>
@@ -545,7 +556,12 @@ const NaradGoods = ({
     return (
       ngoods &&
       ngoods.map((ng, index) => {
-        const clsName = classNames({ soughtFor: soughtFor(ng.id) });
+        const clsName = classNames({ 'has-text-info': soughtFor(ng.id) });
+		const hasNgOe = Boolean(ng.oenumber)
+		const hasGcOe = Boolean(ng.goods_card && ng.goods_card.originalnumber)
+		const hasGcMn = Boolean(ng.goods_card && ng.goods_card.manufacturernumber)
+		const hasOENubmers = Boolean(hasNgOe || 
+		hasGcOe || hasGcMn)
         const sum = ng.price * ng.amount;
         totalIt += ng.amount;
         totalPr += sum;
@@ -556,7 +572,7 @@ const NaradGoods = ({
               <span className="icon-text">
                 {ng.goods_card && (
                   <span className="icon">
-                    <FontAwesomeIcon icon={faWarehouse} />
+                    <FontAwesomeIcon icon={faWarehouse} title="Запчасть со склада"/> 
                   </span>
                 )}
                 <span>
@@ -564,7 +580,26 @@ const NaradGoods = ({
                 </span>
               </span>
             </td>
-            <td>{ng.goods_card ? ng.goods_card.articul : ng.goodnumber}</td>
+            <td>
+			<div className="dropdown is-hoverable">
+			{ng.goods_card ? ng.goods_card.articul : ng.goodnumber}
+			{hasOENubmers &&
+            <div className="dropdown-menu" id="dropdown-menu" role="menu">
+			<div className="dropdown-content">
+			{hasNgOe && <div>
+			{`oe N°: ${ng.oenumber}`}
+			</div>}
+			{hasGcOe && <div>
+			{`oe N°: ${ng.goods_card?.originalnumber}`}
+			</div>}
+			{hasGcMn && <div>
+			{`mn N°: ${ng.goods_card?.manufacturernumber}`}
+			</div>}
+				</div>
+            </div>
+			}
+			</div>
+			</td>
             <td>{ng.amount.toFixed(2)}</td>
             <td>{ng.price.toFixed(2)}</td>
             <td>{sum.toFixed(2)}</td>
@@ -575,7 +610,7 @@ const NaradGoods = ({
   };
   return (
     <table className="table is-narrow">
-      <caption className="has-text-left has-text-weight-medium has-text-black has-background-grey-lighter">
+      <caption className="has-text-left has-text-weight-medium has-background-grey-lighter">
         Запасные части и материалы:
       </caption>
       <thead>
@@ -633,9 +668,11 @@ const NaradWorks = ({
   };
   const Works = () => {
     let totalPr = 0;
-	useEffect(()=> {setTotalPrice(totalPr)})
+    useEffect(() => {
+      setTotalPrice(totalPr);
+    });
     return nworks.map((nw, index) => {
-      const clsName = classNames({ soughtFor: soughtFor(nw.id) });
+      const clsName = classNames({  'has-text-info': soughtFor(nw.id) });
       totalPr += nw.finalprice;
       return (
         <tr className={clsName} key={nw.id}>
@@ -650,7 +687,7 @@ const NaradWorks = ({
   };
   return (
     <table className="table is-narrow mb-2">
-      <caption className="has-text-left has-text-weight-medium has-text-black has-background-grey-lighter">
+      <caption className="has-text-left has-text-weight-medium has-background-grey-lighter">
         Работы:
       </caption>
       <thead>
