@@ -3,7 +3,7 @@ import { Field } from "formik";
 import { Fragment, useEffect, useState } from "react";
 import { UseAsyncReturn } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
-import { paginationFetchResult, useAsyncFetchResult } from "./api";
+import { paginationSearchResult, useAsyncFetchResult } from "./api";
 import {
   DivSpinner,
   ErrorMessage,
@@ -13,7 +13,7 @@ import {
   ShowDetailToggle,
 } from "./components";
 
-export type Client = {
+type Client = {
   cars: Car[];
   cars_ids: number[];
   email: string;
@@ -47,13 +47,14 @@ type Car = {
   model: string;
   bodytype: string;
 };
+export type clientsSearchResult = paginationSearchResult<Client>
 
 export const ClientsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchString = searchParams.toString();
-  const asyncClients = useAsyncFetchResult<paginationFetchResult<Client>>("clients?", searchString);
+  const asyncClients = useAsyncFetchResult<clientsSearchResult>("clients?", searchParams.toString());
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
+    sParams.delete("per_page");
     if (sParams.get("name")) {
       sParams.delete("client_id");
       sParams.delete("clm_id");
@@ -86,7 +87,14 @@ export const ClientsPage = () => {
         />
       </div>
 	  {(!asyncClients.loading && !asyncClients.result && !asyncClients.error) &&
-	  <p className="has-background-grey-lighter has-text-centered is-size-5">Данные из БД не запрашивались</p>}
+        <div className="has-background-grey-lighter has-text-centered is-size-5">
+          <p>Данные из БД не запрашивались</p>
+          <div>
+            <a href="clients?page=1">Загрузить</a>
+            <span> первую страницу списка клиетов без фильтрации</span>
+          </div>
+        </div>
+	  }
       {asyncClients.loading && <DivSpinner />}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (
@@ -109,7 +117,7 @@ export const ClientsPage = () => {
 export const ByClientAuto = (props: {
   clientID: string | null;
   clmID: string | null;
-  asyncReturn: UseAsyncReturn<paginationFetchResult<Client> | undefined>;
+  asyncReturn: UseAsyncReturn<paginationSearchResult<Client> | undefined>;
 }) => {
   const notFound = (obj: string, id: string | null) => (
     <span className="has-text-danger">{`${obj} с id ${id} не найдено`}</span>
@@ -237,7 +245,7 @@ const ClientsSearchForm = (props: SearchFormProps) => {
   );
 };
 
-const ResultsTable = (props: { fetchResult: paginationFetchResult<Client> }) => {
+const ResultsTable = (props: { fetchResult: paginationSearchResult<Client> }) => {
   const heads = ["Имя в справочнике", "Телефоны", "eMail", "Скидки"];
   const [showDetails, setShowDetails] = useState(false);
   const total = props.fetchResult.data ? props.fetchResult.data.length : 0;
@@ -380,7 +388,7 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
       props.cars &&
       props.cars.map((car, index) => {
         const clsName = classNames({
-          soughtFor: props.cars_ids.includes(car.id),
+          'has-text-info': props.cars_ids.includes(car.id),
         });
         return (
           <tr key={car.id} className={clsName}>

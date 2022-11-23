@@ -1,13 +1,12 @@
 import classNames from "classnames";
 import { Field } from "formik";
 import { Fragment, ReactElement, useEffect, useState } from "react";
-import { useAsyncAbortable } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faWarehouse } from "@fortawesome/free-solid-svg-icons";
 import { rubles } from "rubles";
-import { fetchAPI, paginationFetchResult, useAsyncFetchResult } from "./api";
-import { ByClientAuto, Client } from "./Clients";
+import { paginationSearchResult, useAsyncFetchResult } from "./api";
+import { ByClientAuto, clientsSearchResult } from "./Clients";
 import {
   DivSpinner,
   ErrorMessage,
@@ -86,11 +85,7 @@ type priceDiscount = {
   finalPrice: number;
   setFP: React.Dispatch<React.SetStateAction<number>>;
 };
-const fetchNarads = (
-  uri: string,
-  abortSignal?: AbortSignal
-): Promise<fetchResult> => fetchAPI(uri, abortSignal);
-
+type naradsSearchResult = paginationSearchResult<Narad>;
 const getMark = (m: number) => {
   switch (m) {
     case 0:
@@ -139,23 +134,25 @@ const formatter = new Intl.NumberFormat(undefined, {
   //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
 });
 */
+
 export const NaradsPage = (): ReactElement => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const asyncNarads = useAsyncAbortable(
-    async (abortSignal, searchParams) => {
-      const uri = "narads?" + searchParams.toString();
-      return fetchNarads(uri, abortSignal);
-    },
-    [searchParams]
+  const asyncNarads = useAsyncFetchResult<naradsSearchResult>(
+    "narads?",
+    searchParams.toString()
   );
   const clientID = searchParams.get("client_id");
   const clmID = searchParams.get("clm_id");
   const searchClientString = `${clientID ? "client_id=" + clientID : ""}${
     clmID ? "&clm_id=" + clmID : ""
   }`;
-  const asyncClients = useAsyncFetchResult<paginationFetchResult<Client>>("clients?", searchClientString);
+  const asyncClients = useAsyncFetchResult<clientsSearchResult>(
+    "clients?",
+    searchClientString
+  );
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
+    sParams.delete("per_page");
     if (sParams.get("cl_name")) {
       sParams.delete("client_id");
       sParams.delete("clm_id");
@@ -185,6 +182,15 @@ export const NaradsPage = (): ReactElement => {
           onReset={onFormReset}
         />
       </div>
+      {!asyncNarads.loading && !asyncNarads.result && !asyncNarads.error && (
+        <div className="has-background-grey-lighter has-text-centered is-size-5">
+          <p>Данные из БД не запрашивались</p>
+          <div>
+            <a href="narads?page=1">Загрузить</a>
+            <span> первую страницу заказ-нарядов без фильтрации</span>
+          </div>
+        </div>
+      )}<DivSpinner />
       {asyncNarads.loading && <DivSpinner />}
       {asyncNarads.error && <ErrorMessage text={asyncNarads.error.message} />}
       {asyncNarads.result && (
@@ -427,10 +433,14 @@ const NaradRender = ({
           style={getMark(narad.mark)}
         >
           <div>
-              {isDone && (
-                  <FontAwesomeIcon icon={faCheck} className="is-done" title="Выполненный" />
-              )}
-              {narad.docnumber}
+            {isDone && (
+              <FontAwesomeIcon
+                icon={faCheck}
+                className="is-done"
+                title="Выполненный"
+              />
+            )}
+            {narad.docnumber}
             <span
               className={closeOrOpenCls}
               title="Развернуть/Свернуть"
@@ -556,12 +566,13 @@ const NaradGoods = ({
     return (
       ngoods &&
       ngoods.map((ng, index) => {
-        const clsName = classNames({ 'has-text-info': soughtFor(ng.id) });
-		const hasNgOe = Boolean(ng.oenumber)
-		const hasGcOe = Boolean(ng.goods_card && ng.goods_card.originalnumber)
-		const hasGcMn = Boolean(ng.goods_card && ng.goods_card.manufacturernumber)
-		const hasOENubmers = Boolean(hasNgOe || 
-		hasGcOe || hasGcMn)
+        const clsName = classNames({ "has-text-info": soughtFor(ng.id) });
+        const hasNgOe = Boolean(ng.oenumber);
+        const hasGcOe = Boolean(ng.goods_card && ng.goods_card.originalnumber);
+        const hasGcMn = Boolean(
+          ng.goods_card && ng.goods_card.manufacturernumber
+        );
+        const hasOENubmers = Boolean(hasNgOe || hasGcOe || hasGcMn);
         const sum = ng.price * ng.amount;
         totalIt += ng.amount;
         totalPr += sum;
@@ -572,7 +583,10 @@ const NaradGoods = ({
               <span className="icon-text">
                 {ng.goods_card && (
                   <span className="icon">
-                    <FontAwesomeIcon icon={faWarehouse} title="Запчасть со склада"/> 
+                    <FontAwesomeIcon
+                      icon={faWarehouse}
+                      title="Запчасть со склада"
+                    />
                   </span>
                 )}
                 <span>
@@ -581,25 +595,34 @@ const NaradGoods = ({
               </span>
             </td>
             <td>
-			<div className="dropdown is-hoverable">
-			{ng.goods_card ? ng.goods_card.articul : ng.goodnumber}
-			{hasOENubmers &&
-            <div className="dropdown-menu" id="dropdown-menu" role="menu">
-			<div className="dropdown-content">
-			{hasNgOe && <div>
-			{`oe N°: ${ng.oenumber}`}
-			</div>}
-			{hasGcOe && <div>
-			{`oe N°: ${ng.goods_card?.originalnumber}`}
-			</div>}
-			{hasGcMn && <div>
-			{`mn N°: ${ng.goods_card?.manufacturernumber}`}
-			</div>}
-				</div>
-            </div>
-			}
-			</div>
-			</td>
+              <div className="dropdown is-hoverable">
+                {ng.goods_card ? ng.goods_card.articul : ng.goodnumber}
+                {hasOENubmers && (
+                  <div className="dropdown-menu" id="dropdown-menu" role="menu">
+                    <div className="dropdown-content">
+                      {hasNgOe && (
+                        <div>
+                          <span className="is-italic">oe_N°: </span>
+                          {ng.oenumber}
+                        </div>
+                      )}
+                      {hasGcOe && (
+                        <div>
+                          <span className="is-italic">oe_N°: </span>
+                          {ng.goods_card?.originalnumber}
+                        </div>
+                      )}
+                      {hasGcMn && (
+                        <div>
+                          <span className="is-italic">mn_N°: </span>
+                          {ng.goods_card?.manufacturernumber}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </td>
             <td>{ng.amount.toFixed(2)}</td>
             <td>{ng.price.toFixed(2)}</td>
             <td>{sum.toFixed(2)}</td>
@@ -672,7 +695,7 @@ const NaradWorks = ({
       setTotalPrice(totalPr);
     });
     return nworks.map((nw, index) => {
-      const clsName = classNames({  'has-text-info': soughtFor(nw.id) });
+      const clsName = classNames({ "has-text-info": soughtFor(nw.id) });
       totalPr += nw.finalprice;
       return (
         <tr className={clsName} key={nw.id}>

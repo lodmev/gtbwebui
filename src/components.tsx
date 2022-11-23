@@ -211,8 +211,7 @@ export const Pagination = (props: {
 
 export const DivSpinner = (): ReactElement => (
   <div
-    className="loader is-size-1
-"
+    className="loader is-size-1 has-border-color-info"
     style={{ margin: "auto" }}
   ></div>
 );

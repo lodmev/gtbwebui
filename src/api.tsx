@@ -1,5 +1,5 @@
 import { useAsyncAbortable } from "react-async-hook";
-export type paginationFetchResult<T> = {
+export type paginationSearchResult<T> = {
   data: T[];
   page: number;
   pages: number;

@@ -68,6 +68,11 @@ hr.blank {
 .is-done {
 	color: grey;
 }
+.has-border-color-info {
+    border: 2px solid hsl(204, 86%, 53%)!important;
+    border-right-color: transparent!important;
+    border-top-color: transparent!important;
+}
 svg.is-done {
 	color: #72f373;
 }
