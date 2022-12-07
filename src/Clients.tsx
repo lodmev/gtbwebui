@@ -1,9 +1,13 @@
 import classNames from "classnames";
 import { Field } from "formik";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useContext, createContext } from "react";
 import { UseAsyncReturn } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
-import { paginationSearchResult, useAsyncFetchResult } from "./api";
+import {
+  paginationSearchResult,
+  useAsyncSearchResult,
+  useAsyncFetch,
+} from "./api";
 import {
   DivSpinner,
   ErrorMessage,
@@ -42,20 +46,37 @@ type Car = {
   enginetype: string;
   bodyno: string;
   regno: string;
-  color: string;
+  color: number;
   notes: string;
   model: string;
-  bodytype: string;
+  bodytype: number;
+  yearproduction:string;
 };
-export type clientsSearchResult = paginationSearchResult<Client>
+
+type carColorsT = {
+  [id: number]: string;
+};
+type bodyTypesT = {
+  [id: number]: string;
+}
+type CarPropsContextType = {
+	carColors: carColorsT;
+	bodyType: bodyTypesT;
+}
+const CarPropsContext = createContext<CarPropsContextType | null>(null)
+
+export type clientsSearchResult = paginationSearchResult<Client>;
 
 export const ClientsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const asyncClients = useAsyncFetchResult<clientsSearchResult>("clients?", searchParams.toString());
+  const asyncClients = useAsyncSearchResult<clientsSearchResult>(
+    "clients?",
+    searchParams.toString()
+  );
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
     sParams.delete("per_page");
-    if (sParams.get("name")) {
+    if (sParams.get("cl_name")) {
       sParams.delete("client_id");
       sParams.delete("clm_id");
     }
@@ -86,15 +107,15 @@ export const ClientsPage = () => {
           onReset={onFormReset}
         />
       </div>
-	  {(!asyncClients.loading && !asyncClients.result && !asyncClients.error) &&
+      {!asyncClients.loading && !asyncClients.result && !asyncClients.error && (
         <div className="has-background-grey-lighter has-text-centered is-size-5">
-          <p>Данные из БД не запрашивались</p>
+          <p>Данные из БД не запрашивались.</p>
           <div>
             <a href="clients?page=1">Загрузить</a>
-            <span> первую страницу списка клиетов без фильтрации</span>
+            <span> первую страницу списка клиентов без фильтрации?</span>
           </div>
         </div>
-	  }
+      )}
       {asyncClients.loading && <DivSpinner />}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (
@@ -172,7 +193,7 @@ export const ByClientAuto = (props: {
 };
 const ClientsSearchForm = (props: SearchFormProps) => {
   const initValues = {
-    name: "",
+    cl_name: "",
     phone: "",
     model: "",
     vin: "",
@@ -187,7 +208,7 @@ const ClientsSearchForm = (props: SearchFormProps) => {
               <label className="label">Имя</label>
               <div className="control">
                 <Field
-                  name="name"
+                  name="cl_name"
                   type="search"
                   className="input"
                   placeholder="Имя в справочнике"
@@ -245,9 +266,38 @@ const ClientsSearchForm = (props: SearchFormProps) => {
   );
 };
 
-const ResultsTable = (props: { fetchResult: paginationSearchResult<Client> }) => {
+const ResultsTable = (props: {
+  fetchResult: paginationSearchResult<Client>;
+}) => {
   const heads = ["Имя в справочнике", "Телефоны", "eMail", "Скидки"];
   const [showDetails, setShowDetails] = useState(false);
+  const [carColors, setCarcolors] = useState<carColorsT>({ 0: "unknown" });
+  const [bodyTypes, setBodyTypes] = useState<bodyTypesT>({ [-1]: "" });
+  type fetchColorType = {
+    id: number;
+    fullname: string;
+  };
+  type fetchBodytypesType = {
+	  id: number;
+	  bodytypename: string;
+  };
+  const fetchColors = useAsyncFetch<fetchColorType[]>("dircolors");
+  const fetchBodyTypes = useAsyncFetch<fetchBodytypesType[]>("dirbodytypes");
+  useEffect(() => {
+    if (fetchColors.result) {
+      fetchColors.result.forEach(color => {
+        setCarcolors((c) => ({ ...c, [color.id]: color.fullname }));
+      });
+    }
+  }, [fetchColors.result]);
+  useEffect(() => {
+    if (fetchBodyTypes.result) {
+      fetchBodyTypes.result.forEach(bodytype => {
+        setBodyTypes((bt) => ({ ...bt, [bodytype.id]: bodytype.bodytypename }));
+      });
+    }
+  }, [fetchBodyTypes.result]);
+
   const total = props.fetchResult.data ? props.fetchResult.data.length : 0;
   if (total === 0) {
     return (
@@ -258,7 +308,7 @@ const ResultsTable = (props: { fetchResult: paginationSearchResult<Client> }) =>
   }
   return (
     <div className="table-container">
-      <table className="table is-bordered is-narrow is-hoverable ">
+      <table className="table is-bordered is-narrow is-hoverable is-fullwidth">
         <thead>
           <tr>
             <td className="noborder" colSpan={2}>
@@ -285,10 +335,12 @@ const ResultsTable = (props: { fetchResult: paginationSearchResult<Client> }) =>
         </tfoot>
         <tbody>
           {props.fetchResult.data.length > 0 ? (
+			<CarPropsContext.Provider value={{carColors, bodyType: bodyTypes}}>
             <Clients
               clients={props.fetchResult.data}
               showDetails={showDetails}
             />
+			</CarPropsContext.Provider>
           ) : (
             <EmptyRow />
           )}
@@ -297,7 +349,10 @@ const ResultsTable = (props: { fetchResult: paginationSearchResult<Client> }) =>
     </div>
   );
 };
-const Clients = (props: { clients: Client[]; showDetails: boolean }) => {
+const Clients = (props: {
+  clients: Client[];
+  showDetails: boolean;
+}) => {
   return (
     <>
       {props.clients.map((item) => (
@@ -310,7 +365,10 @@ const Clients = (props: { clients: Client[]; showDetails: boolean }) => {
     </>
   );
 };
-const ClientRender = (props: { client: Client; gShowDetails: boolean }) => {
+const ClientRender = (props: {
+  client: Client;
+  gShowDetails: boolean;
+}) => {
   const [showDetailes, setShowDetails] = useState(false);
   const closeOrOpenCls = classNames({
     open: showDetailes,
@@ -382,13 +440,17 @@ const ClientRender = (props: { client: Client; gShowDetails: boolean }) => {
     </Fragment>
   );
 };
-const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
+const ClientCars = (props: {
+  cars: Car[];
+  cars_ids: number[];
+}) => {
+	const carProps = useContext(CarPropsContext)
   const carRows = () => {
     return (
       props.cars &&
       props.cars.map((car, index) => {
         const clsName = classNames({
-          'has-text-info': props.cars_ids.includes(car.id),
+          "has-text-info": props.cars_ids.includes(car.id),
         });
         return (
           <tr key={car.id} className={clsName}>
@@ -410,14 +472,15 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
             </td>
             <td>{car.vin}</td>
             <td>{car.regno}</td>
+            <td>{car.yearproduction}</td>
             <td>
               <span>{`№: ${car.engineno || ""}; Тип: ${
                 car.enginetype || "-"
               }`}</span>
             </td>
-            <td>{car.color}</td>
+            <td>{carProps?.carColors[car.color]}</td>
             <td>
-              <span>{`№: ${car.bodyno || ""}; Тип:${car.bodytype}`}</span>
+              <span>{`№: ${car.bodyno || ""}; Тип:${carProps?.bodyType[car.bodytype]}`}</span>
             </td>
             <td>{car.notes}</td>
           </tr>
@@ -436,10 +499,11 @@ const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
           <td>Марка модель</td>
           <td className="bitwide">VIN</td>
           <td className="bitwide">Гос. номер</td>
+          <td>Год выпуска</td>
           <td>Двигатель</td>
           <td>Цвет</td>
           <td>Кузов</td>
-          <td>Примечания</td>
+          <td className="wide">Примечания</td>
         </tr>
       </thead>
       <tbody>

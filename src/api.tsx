@@ -1,11 +1,18 @@
-import { useAsyncAbortable } from "react-async-hook";
+import { useAsyncAbortable, UseAsyncReturn, useAsync } from "react-async-hook";
 export type paginationSearchResult<T> = {
   data: T[];
   page: number;
   pages: number;
   total_items: number;
 };
-export const useAsyncFetchResult = <T,>(endpoint: string, searchParams: string) => {
+export const useAsyncFetch = <T,>(uri:string) => {
+	return useAsync (
+			async (url:string) => {
+				return fetchAPI<T>(url)
+			}, [uri]
+			)
+}
+export const useAsyncSearchResult = <T,>(endpoint: string, searchParams: string) => {
   return useAsyncAbortable(
     async (abortSignal, searchParams) => {
       if (searchParams === "") return;

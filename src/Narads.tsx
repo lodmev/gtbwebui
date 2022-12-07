@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faWarehouse } from "@fortawesome/free-solid-svg-icons";
 import { rubles } from "rubles";
-import { paginationSearchResult, useAsyncFetchResult } from "./api";
+import { paginationSearchResult, useAsyncSearchResult } from "./api";
 import { ByClientAuto, clientsSearchResult } from "./Clients";
 import {
   DivSpinner,
@@ -137,7 +137,7 @@ const formatter = new Intl.NumberFormat(undefined, {
 
 export const NaradsPage = (): ReactElement => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const asyncNarads = useAsyncFetchResult<naradsSearchResult>(
+  const asyncNarads = useAsyncSearchResult<naradsSearchResult>(
     "narads?",
     searchParams.toString()
   );
@@ -146,7 +146,7 @@ export const NaradsPage = (): ReactElement => {
   const searchClientString = `${clientID ? "client_id=" + clientID : ""}${
     clmID ? "&clm_id=" + clmID : ""
   }`;
-  const asyncClients = useAsyncFetchResult<clientsSearchResult>(
+  const asyncClients = useAsyncSearchResult<clientsSearchResult>(
     "clients?",
     searchClientString
   );
@@ -157,7 +157,7 @@ export const NaradsPage = (): ReactElement => {
       sParams.delete("client_id");
       sParams.delete("clm_id");
     }
-    if (sParams.get("model_name")) sParams.delete("clm_id");
+    if (sParams.get("model")) sParams.delete("clm_id");
     setSearchParams(sParams);
   };
   const onFormReset = () => {
@@ -184,13 +184,13 @@ export const NaradsPage = (): ReactElement => {
       </div>
       {!asyncNarads.loading && !asyncNarads.result && !asyncNarads.error && (
         <div className="has-background-grey-lighter has-text-centered is-size-5">
-          <p>Данные из БД не запрашивались</p>
+          <p>Данные из БД не запрашивались.</p>
           <div>
             <a href="narads?page=1">Загрузить</a>
-            <span> первую страницу заказ-нарядов без фильтрации</span>
+            <span> первую страницу заказ-нарядов без фильтрации?</span>
           </div>
         </div>
-      )}<DivSpinner />
+      )}
       {asyncNarads.loading && <DivSpinner />}
       {asyncNarads.error && <ErrorMessage text={asyncNarads.error.message} />}
       {asyncNarads.result && (
@@ -270,7 +270,7 @@ const NaradsSearchForm = (props: SearchFormProps) => {
   const initValues = {
     g_name: "",
     articul: "",
-    model_name: "",
+    model: "",
     workname: "",
     cl_name: "",
     docnumber: "",
@@ -333,7 +333,7 @@ const NaradsSearchForm = (props: SearchFormProps) => {
                 <label className="label">Автомобиль</label>
                 <div className="control">
                   <Field
-                    name="model_name"
+                    name="model"
                     type="search"
                     className="input"
                     placeholder="Марка и/или модель"
