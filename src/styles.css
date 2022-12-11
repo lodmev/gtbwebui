@@ -68,6 +68,9 @@ hr.blank {
 .is-done {
 	color: grey;
 }
+.nested-ul {
+	padding-left:0.75rem;
+}
 .has-border-color-info {
     border: 2px solid hsl(204, 86%, 53%)!important;
     border-right-color: transparent!important;

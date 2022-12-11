@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faWarehouse } from "@fortawesome/free-solid-svg-icons";
 import { rubles } from "rubles";
-import { paginationSearchResult, useAsyncSearchResult } from "./api";
+import { paginationSearchResult,useAsyncSearchResult } from "./api";
 import { ByClientAuto, clientsSearchResult } from "./Clients";
 import {
   DivSpinner,
@@ -148,7 +148,7 @@ export const NaradsPage = (): ReactElement => {
   }`;
   const asyncClients = useAsyncSearchResult<clientsSearchResult>(
     "clients?",
-    searchClientString
+	searchClientString,
   );
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
@@ -187,7 +187,7 @@ export const NaradsPage = (): ReactElement => {
           <p>Данные из БД не запрашивались.</p>
           <div>
             <a href="narads?page=1">Загрузить</a>
-            <span> первую страницу заказ-нарядов без фильтрации?</span>
+            <span> первую страницу <strong>заказ-нарядов</strong> без фильтрации?</span>
           </div>
         </div>
       )}

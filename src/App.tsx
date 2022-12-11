@@ -4,6 +4,7 @@ import './App.css';
 import { CustomLink } from './components';
 import { NaradsPage } from './Narads';
 import { ClientsPage } from './Clients';
+import { CommonworkPage } from './Commonworks';
 
 interface AppProps {
 	name: string
@@ -19,6 +20,7 @@ const App: FC<AppProps> = (props) => {
 				<Route path="/" element={<Layout />}>
 					<Route path="/narads" element={<NaradsPage />} />
 					<Route path="/clients" element={<ClientsPage />} />
+					<Route path="/commonworks" element={<CommonworkPage />} />
 					{/* Using path="*"" means "match anything", so this route acts like a catch-all for URLs that we don't have explicit routes for. */}
 					<Route path="*" element={<NoMatch />} />
 				</Route>
@@ -35,7 +37,7 @@ const Layout = (): ReactElement => {
 			<ul>
 				<CustomLink  to="/narads">Заказ-наряды</CustomLink>
 				<CustomLink  to="/clients">Клиенты</CustomLink>
-				<CustomLink  to="/goodscards">Склад</CustomLink>
+				<CustomLink  to="/commonworks">Работы</CustomLink>
 			</ul>
 			</nav>
 			<hr />

@@ -6,7 +6,6 @@ import { useSearchParams } from "react-router-dom";
 import {
   paginationSearchResult,
   useAsyncSearchResult,
-  useAsyncFetch,
 } from "./api";
 import {
   DivSpinner,
@@ -93,7 +92,7 @@ export const ClientsPage = () => {
   return (
     <div className="block">
       <p className="pb-3 has-text-weight-bold is-size-5">
-        Поля для запроса в базу данных:
+        Поиск клиентов:
       </p>
       <div className="column has-background-white-bis">
         <ByClientAuto
@@ -112,11 +111,11 @@ export const ClientsPage = () => {
           <p>Данные из БД не запрашивались.</p>
           <div>
             <a href="clients?page=1">Загрузить</a>
-            <span> первую страницу списка клиентов без фильтрации?</span>
+            <span> первую страницу <strong>списка клиентов</strong> без фильтрации?</span>
           </div>
         </div>
       )}
-      {asyncClients.loading && <DivSpinner />}
+      {asyncClients.loading && <DivSpinner/>}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (
         <div className="">
@@ -281,8 +280,8 @@ const ResultsTable = (props: {
 	  id: number;
 	  bodytypename: string;
   };
-  const fetchColors = useAsyncFetch<fetchColorType[]>("dircolors");
-  const fetchBodyTypes = useAsyncFetch<fetchBodytypesType[]>("dirbodytypes");
+  const fetchColors = useAsyncSearchResult<fetchColorType[]>("dircolors","?");
+  const fetchBodyTypes = useAsyncSearchResult<fetchBodytypesType[]>("dirbodytypes","?");
   useEffect(() => {
     if (fetchColors.result) {
       fetchColors.result.forEach(color => {
