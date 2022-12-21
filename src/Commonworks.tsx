@@ -231,7 +231,7 @@ const Ul = ({
       </li>
     </ul>
   );
-  if (parentID != 0) {
+  if (parentID !== 0) {
     return (
       <Ul id={parentID} cmnwksGroups={cmnwksGroups}>
         {current}

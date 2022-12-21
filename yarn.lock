@@ -5109,6 +5109,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"detect-it@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "detect-it@npm:4.0.1"
+  checksum: 013981eae87c0265169e11e09efcc1c78fb2fc3e956b0001eb8d741ce03784a3e8e6d60e1445105f510c52be2ccffbd1c31c1bc094d01ad77f11df9830822a9c
+  languageName: node
+  linkType: hard
+
 "detect-newline@npm:^3.0.0":
   version: 3.1.0
   resolution: "detect-newline@npm:3.1.0"
@@ -5120,6 +5127,15 @@ __metadata:
   version: 2.1.0
   resolution: "detect-node@npm:2.1.0"
   checksum: 832184ec458353e41533ac9c622f16c19f7c02d8b10c303dfd3a756f56be93e903616c0bb2d4226183c9351c15fc0b3dba41a17a2308262afabcfa3776e6ae6e
+  languageName: node
+  linkType: hard
+
+"detect-passive-events@npm:^2.0.2":
+  version: 2.0.3
+  resolution: "detect-passive-events@npm:2.0.3"
+  dependencies:
+    detect-it: ^4.0.1
+  checksum: 2fb48474e340a1add096735427433578c571e2fed0c44af86ac116c50b9b7d70662a2e3bf1539d9dff4e2a43459c874b20876270afe7beeb5d4bef08ff9d4a5c
   languageName: node
   linkType: hard
 
@@ -6649,6 +6665,7 @@ __metadata:
     react-dom: ^18.1.0
     react-router-dom: 6
     react-scripts: 5.0.1
+    react-scroll-up: ^1.4.0
     rubles: ^0.2.0
     typescript: ^4.4.2
     web-vitals: ^2.1.0
@@ -9057,7 +9074,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"object-assign@npm:^4.1.1":
+"object-assign@npm:^4.0.1, object-assign@npm:^4.1.1":
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
   checksum: fcc6e4ea8c7fe48abfbb552578b1c53e0d194086e2e6bbbf59e0a536381a292f39943c6e9628af05b5528aa5e3318bb30d6b2e53cadaf5b8fe9e12c4b69af23f
@@ -10424,7 +10441,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:^15.8.1":
+"prop-types@npm:^15.5.8, prop-types@npm:^15.8.1":
   version: 15.8.1
   resolution: "prop-types@npm:15.8.1"
   dependencies:
@@ -10730,6 +10747,20 @@ __metadata:
   bin:
     react-scripts: bin/react-scripts.js
   checksum: 92afa2f245c7092ccc97d5609dc7a2130616262e34da7f15072d9442e2d2e1d4909a91022abd1faac1336eb17c5525a10d9bd43e1ae374c7ec941ca20addca68
+  languageName: node
+  linkType: hard
+
+"react-scroll-up@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "react-scroll-up@npm:1.4.0"
+  dependencies:
+    detect-passive-events: ^2.0.2
+    object-assign: ^4.0.1
+    prop-types: ^15.5.8
+    tween-functions: ^1.1.0
+  peerDependencies:
+    react: 0.13 - 18
+  checksum: e37d528c116b13abc30541c0fa71bdab9964847da0f8f572464a2164da378d4ba30ff0e174e974f22a901632d23b2675cf9fe1dd95947704665ced46f3ce8c9c
   languageName: node
   linkType: hard
 
@@ -12174,6 +12205,13 @@ __metadata:
   peerDependencies:
     typescript: ">=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta"
   checksum: 1843f4c1b2e0f975e08c4c21caa4af4f7f65a12ac1b81b3b8489366826259323feb3fc7a243123453d2d1a02314205a7634e048d4a8009921da19f99755cdc48
+  languageName: node
+  linkType: hard
+
+"tween-functions@npm:^1.1.0":
+  version: 1.2.0
+  resolution: "tween-functions@npm:1.2.0"
+  checksum: 880708d680eff5c347ddcb9f922ad121703a91c78ce308ed309073e73a794b633eb0b80589a839365803f150515ad34c9646809ae8a0e90f09e62686eefb1ab6
   languageName: node
   linkType: hard
 

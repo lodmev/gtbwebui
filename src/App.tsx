@@ -1,10 +1,13 @@
 import { FC, ReactElement, useEffect } from 'react';
 import { Link, Outlet, Route, Routes } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleArrowUp} from "@fortawesome/free-solid-svg-icons";
 import './App.css';
 import { CustomLink } from './components';
 import { NaradsPage } from './Narads';
 import { ClientsPage } from './Clients';
 import { CommonworkPage } from './Commonworks';
+import ScrollToTop from 'react-scroll-up';
 
 interface AppProps {
 	name: string
@@ -32,6 +35,9 @@ export default App;
 const Layout = (): ReactElement => {
 	return (
 		<div>
+		<ScrollToTop showUnder={160} >
+		<FontAwesomeIcon icon={faCircleArrowUp} className="is-size-3"/>
+		</ScrollToTop>
 			{/* A "layout route" is a good place to put markup you want to share across all the pages on your site, like navigation. */}
 			<nav className='breadcrumb is-centered'>
 			<ul>
