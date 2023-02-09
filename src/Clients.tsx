@@ -1,12 +1,15 @@
 import classNames from "classnames";
 import { Field } from "formik";
-import { Fragment, useEffect, useState, useContext, createContext } from "react";
+import {
+  Fragment,
+  useEffect,
+  useState,
+  useContext,
+  createContext,
+} from "react";
 import { UseAsyncReturn } from "react-async-hook";
 import { useSearchParams } from "react-router-dom";
-import {
-  paginationSearchResult,
-  useAsyncSearchResult,
-} from "./api";
+import { paginationSearchResult, useAsyncSearchResult } from "./api";
 import {
   DivSpinner,
   ErrorMessage,
@@ -49,7 +52,7 @@ type Car = {
   notes: string;
   model: string;
   bodytype: number;
-  yearproduction:string;
+  yearproduction: string;
 };
 
 type carColorsT = {
@@ -57,19 +60,18 @@ type carColorsT = {
 };
 type bodyTypesT = {
   [id: number]: string;
-}
+};
 type CarPropsContextType = {
-	carColors: carColorsT;
-	bodyType: bodyTypesT;
-}
-const CarPropsContext = createContext<CarPropsContextType | null>(null)
+  carColors: carColorsT;
+  bodyType: bodyTypesT;
+};
+const CarPropsContext = createContext<CarPropsContextType | null>(null);
 
 export type clientsSearchResult = paginationSearchResult<Client>;
 
 export const ClientsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const asyncClients = useAsyncSearchResult<clientsSearchResult>(
-    "clients?",
+  const asyncClients = useAsyncSearchResult<clientsSearchResult>( "clients?",
     searchParams.toString()
   );
   const onFormSubmit = (sParams: URLSearchParams) => {
@@ -91,9 +93,7 @@ export const ClientsPage = () => {
   };
   return (
     <div className="block">
-      <p className="pb-3 has-text-weight-bold is-size-5">
-        Поиск клиентов:
-      </p>
+      <p className="pb-3 has-text-weight-bold is-size-5">Поиск клиентов:</p>
       <div className="column has-background-white-bis">
         <ByClientAuto
           clientID={searchParams.get("client_id")}
@@ -111,11 +111,14 @@ export const ClientsPage = () => {
           <p>Данные из БД не запрашивались.</p>
           <div>
             <a href="clients?page=1">Загрузить</a>
-            <span> первую страницу <strong>списка клиентов</strong> без фильтрации?</span>
+            <span>
+              {" "}
+              первую страницу <strong>списка клиентов</strong> без фильтрации?
+            </span>
           </div>
         </div>
       )}
-      {asyncClients.loading && <DivSpinner/>}
+      {asyncClients.loading && <DivSpinner />}
       {asyncClients.error && <ErrorMessage text={asyncClients.error.message} />}
       {asyncClients.result && (
         <div className="">
@@ -251,7 +254,7 @@ const ClientsSearchForm = (props: SearchFormProps) => {
               <label className="label">Гос. номер</label>
               <div className="control">
                 <Field
-                  name="workname"
+                  name="regno"
                   type="search"
                   className="input"
                   placeholder="Гос. номер"
@@ -277,21 +280,24 @@ const ResultsTable = (props: {
     fullname: string;
   };
   type fetchBodytypesType = {
-	  id: number;
-	  bodytypename: string;
+    id: number;
+    bodytypename: string;
   };
-  const fetchColors = useAsyncSearchResult<fetchColorType[]>("dircolors","?");
-  const fetchBodyTypes = useAsyncSearchResult<fetchBodytypesType[]>("dirbodytypes","?");
+  const fetchColors = useAsyncSearchResult<fetchColorType[]>("dircolors", "?");
+  const fetchBodyTypes = useAsyncSearchResult<fetchBodytypesType[]>(
+    "dirbodytypes",
+    "?"
+  );
   useEffect(() => {
     if (fetchColors.result) {
-      fetchColors.result.forEach(color => {
+      fetchColors.result.forEach((color) => {
         setCarcolors((c) => ({ ...c, [color.id]: color.fullname }));
       });
     }
   }, [fetchColors.result]);
   useEffect(() => {
     if (fetchBodyTypes.result) {
-      fetchBodyTypes.result.forEach(bodytype => {
+      fetchBodyTypes.result.forEach((bodytype) => {
         setBodyTypes((bt) => ({ ...bt, [bodytype.id]: bodytype.bodytypename }));
       });
     }
@@ -334,12 +340,14 @@ const ResultsTable = (props: {
         </tfoot>
         <tbody>
           {props.fetchResult.data.length > 0 ? (
-			<CarPropsContext.Provider value={{carColors, bodyType: bodyTypes}}>
-            <Clients
-              clients={props.fetchResult.data}
-              showDetails={showDetails}
-            />
-			</CarPropsContext.Provider>
+            <CarPropsContext.Provider
+              value={{ carColors, bodyType: bodyTypes }}
+            >
+              <Clients
+                clients={props.fetchResult.data}
+                showDetails={showDetails}
+              />
+            </CarPropsContext.Provider>
           ) : (
             <EmptyRow />
           )}
@@ -348,10 +356,7 @@ const ResultsTable = (props: {
     </div>
   );
 };
-const Clients = (props: {
-  clients: Client[];
-  showDetails: boolean;
-}) => {
+const Clients = (props: { clients: Client[]; showDetails: boolean }) => {
   return (
     <>
       {props.clients.map((item) => (
@@ -364,10 +369,7 @@ const Clients = (props: {
     </>
   );
 };
-const ClientRender = (props: {
-  client: Client;
-  gShowDetails: boolean;
-}) => {
+const ClientRender = (props: { client: Client; gShowDetails: boolean }) => {
   const [showDetailes, setShowDetails] = useState(false);
   const closeOrOpenCls = classNames({
     open: showDetailes,
@@ -439,11 +441,8 @@ const ClientRender = (props: {
     </Fragment>
   );
 };
-const ClientCars = (props: {
-  cars: Car[];
-  cars_ids: number[];
-}) => {
-	const carProps = useContext(CarPropsContext)
+const ClientCars = (props: { cars: Car[]; cars_ids: number[] }) => {
+  const carProps = useContext(CarPropsContext);
   const carRows = () => {
     return (
       props.cars &&
@@ -479,7 +478,9 @@ const ClientCars = (props: {
             </td>
             <td>{carProps?.carColors[car.color]}</td>
             <td>
-              <span>{`№: ${car.bodyno || ""}; Тип:${carProps?.bodyType[car.bodytype]}`}</span>
+              <span>{`№: ${car.bodyno || ""}; Тип:${
+                carProps?.bodyType[car.bodytype]
+              }`}</span>
             </td>
             <td>{car.notes}</td>
           </tr>

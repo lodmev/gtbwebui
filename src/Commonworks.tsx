@@ -226,7 +226,7 @@ const Ul = ({
   const current = (
     <ul className={isNested}>
       <li>
-        {`${cmnwksGroups[id].groupname}${children ? "->" : ""}`}
+        {`${cmnwksGroups[id]?.groupname}${children ? "->" : ""}`}
         {children}
       </li>
     </ul>
