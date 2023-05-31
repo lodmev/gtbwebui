@@ -5,7 +5,6 @@ import {
   ReactElement,
   ReactNode,
   useState,
-  InputHTMLAttributes,
 } from "react";
 import { Link, LinkProps, useMatch, useResolvedPath } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -154,7 +153,7 @@ export const Pagination = (props: {
       <div className="block column is-7" style={{ padding: "inherit" }}>
         {totalPages > 1 && (
           <div className="block tag is-info">
-            Отобраны результатов на&nbsp;
+            Отобраны результаты на&nbsp;
             <strong>{totalPages}</strong>
             &nbsp;страницах:
           </div>
@@ -294,13 +293,16 @@ export const SearchForm = (props: SearchFormProps) => {
     </Formik>
   );
 };
-export const ShowDetailToggle = (
-  props: InputHTMLAttributes<HTMLInputElement>
+export const CheckboxToggle = (
+  props: {state: boolean, SetStateAction:React.Dispatch<React.SetStateAction<boolean>>; name: string}
 ) => (
   <div className="field tag">
     <div className="control">
       <label className="checkbox">
-        <input {...props} /> Развернуть все
+	  <input type="checkbox" className="checkbox" 
+	   checked={props.state} onChange={ (e) => {
+		  props.SetStateAction(e.target.checked)
+	  }} /> {props.name}
       </label>
     </div>
   </div>

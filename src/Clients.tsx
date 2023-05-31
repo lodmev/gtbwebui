@@ -16,7 +16,7 @@ import {
   Pagination,
   SearchForm,
   SearchFormProps,
-  ShowDetailToggle,
+  CheckboxToggle,
 } from "./components";
 
 type Client = {
@@ -317,13 +317,10 @@ const ResultsTable = (props: {
         <thead>
           <tr>
             <td className="noborder" colSpan={2}>
-              <ShowDetailToggle
-                checked={showDetails}
-                onChange={(e) => {
-                  setShowDetails(e.target.checked);
-                }}
-                type="checkbox"
-                className="checkbox"
+              <CheckboxToggle
+                state={showDetails}
+                  SetStateAction={setShowDetails}
+				  name="Развернуть всё"
               />
             </td>
           </tr>
