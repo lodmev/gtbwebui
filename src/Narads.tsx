@@ -155,7 +155,7 @@ export const NaradsPage = (): ReactElement => {
   const onFormSubmit = (sParams: URLSearchParams) => {
     sParams.delete("page");
     sParams.delete("per_page");
-    if (sParams.get("cl_name")) {
+    if (sParams.get("cl_name") || sParams.get("docnumber")) {
       sParams.delete("client_id");
       sParams.delete("clm_id");
     }
