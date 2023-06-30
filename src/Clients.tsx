@@ -96,8 +96,7 @@ export const ClientsPage = () => {
       <p className="pb-3 has-text-weight-bold is-size-5">Поиск клиентов:</p>
       <div className="column has-background-white-bis">
         <ByClientAuto
-          clientID={searchParams.get("client_id")}
-          clmID={searchParams.get("clm_id")}
+		  searchParams={searchParams}
           asyncReturn={asyncClients}
         />
         <ClientsSearchForm
@@ -138,15 +137,14 @@ export const ClientsPage = () => {
 };
 
 export const ByClientAuto = (props: {
-  clientID: string | null;
-  clmID: string | null;
+  searchParams: URLSearchParams
   asyncReturn: UseAsyncReturn<paginationSearchResult<Client> | undefined>;
 }) => {
-  const notFound = (obj: string, id: string | null) => (
-    <span className="has-text-danger">{`${obj} с id ${id} не найдено`}</span>
+  const notFound = (obj: string) => (
+    <span className="has-text-danger">{`${obj} с такими данными не найдено: ${props.searchParams?.toString()}`}</span>
   );
-  const clientID = props.clientID;
-  const clmID = props.clmID;
+  const clientID = props.searchParams.get("client_id");
+  const clmID = props.searchParams.get("clm_id");
   const { result, error, loading } = props.asyncReturn;
   const getClName = () => {
     if (result && result.data && result.data[0]) {
@@ -156,7 +154,7 @@ export const ByClientAuto = (props: {
         </span>
       );
     } else {
-      return notFound("клиента", clientID);
+      return notFound("клиента");
     }
   };
   const getCarName = () => {
@@ -167,7 +165,7 @@ export const ByClientAuto = (props: {
         </span>
       );
     } else {
-      return notFound("автомобиля клиента", clmID);
+      return notFound("автомобиля клиента");
     }
   };
   if (clientID || clmID) {

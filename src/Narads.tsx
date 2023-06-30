@@ -174,8 +174,7 @@ export const NaradsPage = (): ReactElement => {
       <p className="pb-3 has-text-weight-bold is-size-5">Поиск заказ-нарядов</p>
       <div className="column has-background-white-bis">
         <ByClientAuto
-          clientID={clientID}
-          clmID={clmID}
+		  searchParams={searchParams}
           asyncReturn={asyncClients}
         />
         <NaradsSearchForm
