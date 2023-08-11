@@ -66,7 +66,7 @@ hr.blank {
 	display: inline-block;
 }
 .is-done {
-	color: grey;
+	color: #cdcccc;
 }
 .nested-ul {
 	padding-left:0.75rem;
@@ -105,4 +105,27 @@ svg.is-done {
   to {
     width: 40px;
   }
+}
+
+@media print {
+	
+td.wide {
+  min-width: 1px;
+}
+
+td.bitwide {
+  min-width: 1px;
+}
+td.litle-wide {
+  min-width: 1px;
+}
+
+@page {
+  size: a4 landscape;
+}
+
+#scroll-to-top {
+	display: none;
+}
+
 }

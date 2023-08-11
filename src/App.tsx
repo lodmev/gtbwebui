@@ -36,7 +36,7 @@ const Layout = (): ReactElement => {
 	return (
 		<div>
 		<ScrollToTop showUnder={160} >
-		<FontAwesomeIcon icon={faCircleArrowUp} className="is-size-3"/>
+		<FontAwesomeIcon icon={faCircleArrowUp} id="scroll-to-top" className="is-size-3"/>
 		</ScrollToTop>
 			{/* A "layout route" is a good place to put markup you want to share across all the pages on your site, like navigation. */}
 			<nav className='breadcrumb is-centered'>
