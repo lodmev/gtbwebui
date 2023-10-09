@@ -45,6 +45,7 @@ type Narad = {
   recommendations: string;
   run: number;
   status: number;
+  workdiscount: number;
 };
 type naradGood = {
   id: number;
@@ -402,7 +403,7 @@ const NaradRender = ({
     setFP: setGoodsFP,
   };
   const worksPriceDiscount = {
-    discount: narad.gooddiscount,
+    discount: narad.workdiscount,
     finalPrice: workFinalPrice,
     setFP: setWorkFP,
   };
